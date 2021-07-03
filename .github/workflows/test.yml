@@ -14,9 +14,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-      env:
-        SECRET_KEY: k0kayksf5wn3*ag$!x$fqfcyct#x5+m8bthl*6-br^2re%g3+m
+      
     - name: Install dependencies
+      env:
+          SECRET_KEY: k0kayksf5wn3*ag$!x$fqfcyct#x5+m8bthl*6-br^2re%g3+m
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
@@ -29,5 +30,7 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run unittests
+      env:
+            SECRET_KEY: k0kayksf5wn3*ag$!x$fqfcyct#x5+m8bthl*6-br^2re%g3+m
       run: |
         python manage.py test 
