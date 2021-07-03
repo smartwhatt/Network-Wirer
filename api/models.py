@@ -11,7 +11,7 @@ class User(AbstractUser):
 
 def data_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return 'datasets/user_{0}/{1}'.format(instance.owner.id, filename)
+    return 'media_root/datasets/user_{0}/{1}'.format(instance.owner.id, filename)
 
 class Dataset(models.Model):
     name = models.CharField(max_length=32)
@@ -20,6 +20,7 @@ class Dataset(models.Model):
     libraryOf = models.ManyToManyField(User, blank=True, related_name="libraries")
     # types = models.CharField(max_length=16 , choices=dataType)
     upload = models.FileField(upload_to=data_directory_path)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.id}: {self.name} by {self.owner.username}"

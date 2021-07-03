@@ -8,6 +8,10 @@ from .models import *
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from .serializers import *
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
+
 # Create your views here.
 
 @api_view(['GET'])
@@ -54,8 +58,6 @@ def register(request):
 "email": "email.example.com"
 }
 """
-
-
 
 @api_view(['POST'])
 def login_view(request):
@@ -131,3 +133,30 @@ def update_user(request, id):
                 return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
     except ObjectDoesNotExist:
         return Response({"message": "User Does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET', "POST"])
+def dataset(request):
+
+    if request.method == "GET":
+        datasets = Dataset.objects.all()
+        serializer = DatasetSerializer(datasets, many=True)
+        return Response(serializer.data)
+
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                file = request.stream.FILES['file']
+                dataset = Dataset(name=request.data["name"], owner=request.user, upload=file)
+                dataset.save()
+                dataset.libraryOf.add(request.user)
+                if request.data.get("description") is not None:
+                    dataset.description = request.data["description"]
+                dataset.save()
+                serializer = DatasetSerializer(dataset)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except request.data.get("name") is None:
+                return Response({"message": "Name field or file field is not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
+        
