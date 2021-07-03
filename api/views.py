@@ -14,6 +14,7 @@ from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, File
 
 # Create your views here.
 
+
 @api_view(['GET'])
 def index(request):
     payload = {
@@ -27,6 +28,7 @@ def index(request):
     }
     return Response(payload)
 
+
 @ensure_csrf_cookie
 @api_view(['GET'])
 def set_csrf_token(request):
@@ -34,6 +36,7 @@ def set_csrf_token(request):
     This will be `/api/set-csrf-cookie/` on `urls.py`
     """
     return Response({"details": "CSRF cookie set"})
+
 
 @api_view(['POST'])
 def register(request):
@@ -51,6 +54,8 @@ def register(request):
         return Response({"message": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
     login(request, user)
     return Response({"message": "Registered and Logged in successfully."}, status=status.HTTP_201_CREATED)
+
+
 """
 {
 "username":"username",
@@ -58,6 +63,7 @@ def register(request):
 "email": "email.example.com"
 }
 """
+
 
 @api_view(['POST'])
 def login_view(request):
@@ -73,6 +79,7 @@ def login_view(request):
             "message": "Invalid username and/or password."
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET'])
 def logout_view(request):
     logout(request)
@@ -86,6 +93,7 @@ def authenticated_user(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 @api_view(['PUT', "GET", "DELETE"])
 def update_user(request, id):
@@ -146,17 +154,17 @@ def dataset(request):
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
-                file = request.stream.FILES['file']
-                dataset = Dataset(name=request.data["name"], owner=request.user, upload=file)
+                file = request.data['file']
+                dataset = Dataset(
+                    name=request.data["name"], owner=request.user, upload=file)
                 dataset.save()
                 dataset.libraryOf.add(request.user)
                 if request.data.get("description") is not None:
                     dataset.description = request.data["description"]
                 dataset.save()
                 serializer = DatasetSerializer(dataset)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             except request.data.get("name") is None:
                 return Response({"message": "Name field or file field is not provided"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
-        
