@@ -15,7 +15,7 @@ class App extends React.Component {
     
     constructor(props){
         super(props)
-        this.state = { user : 0}
+        this.state = { user : 0, login: false}
         this.getLogedin()
     }
 
@@ -23,9 +23,12 @@ class App extends React.Component {
         fetch("/api/user")
         .then(response => response.json())
         .then(user => {
+            if (user.message !== "User is not logged")
             this.setState({
                 ...this.state,
-                user:user
+                user:user,
+                login : true
+
             })
         });
     }
