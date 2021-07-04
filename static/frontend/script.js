@@ -1,10 +1,20 @@
 
 class Menu extends React.Component{
-    render(props){
+    render(){
         return (
-            <div className="nav-container">
-                <div id="nav-heading">Neural Wirer</div>
-                <div id="nav-username">{this.props.username}</div>
+            <div className="menu-container">
+                <div id="menu-heading">Neural Wirer</div>
+                <div id="menu-username">{this.props.username}</div>
+            </div>
+        )
+    }
+}
+
+class Sidebar extends React.Component{
+    render(){
+        return (
+            <div className="sidebar-container">
+                sidebar desu
             </div>
         )
     }
@@ -37,7 +47,8 @@ class App extends React.Component {
         return (
         <div>
             <Menu username={this.state.user.username}/>
-            Hello World
+            <Sidebar />
+            <div className="content-container">Hello World</div>
         </div>
         
         )

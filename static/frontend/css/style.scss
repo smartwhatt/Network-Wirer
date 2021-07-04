@@ -1,37 +1,58 @@
 $base-color: #9FB7A6;
-$base-light-color: #9FB7A6;
+$base-light-color: #BED2C4;
 $base-dark-color: #9EBDA8;
-@import url(https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap);
 
+$base-text-color: #000000;
+$base-text-light: #F8F6F0;
 
 $secondary-color : #FCF7E8;
 $secondary-light-color : #F8F6F0;
 $secondary-dark-color : #FFCF3E;
 
+$secondary-text-color : #791D34;
+
+
+@import url(https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap);
 
 body {
-    font-size: 24;
+    font-size: 24px;
     font-family: 'Ubuntu', sans-serif;
     background-color: $secondary-light-color;
     margin: 0;
 }
 
-.nav-container {
+.menu-container {
     padding: .5em 0;
     height: 2em;
+    width: 100vw;
     background-color: $base-color;
     top: 0;
     left: 0;
     box-shadow: 0 .2em .2em rgba(0, 0, 0, 0.25);
+    position: fixed;
 }
 
-#nav-heading{
+#menu-heading{
     margin: .25em 1.5em;
     display: inline;
 }
 
-#nav-username{
+#menu-username{
     display: inline;
     float: right;
     margin-right: 3em;
+}
+
+.sidebar-container{
+    height: 100vh;
+    width: 4em;
+    padding-top: 5em;
+    padding-left: 1em;
+    position: fixed;
+    z-index:-1;
+    background-color: $base-light-color;
+}
+
+.content-container {
+    padding: 4em 6em;
 }
