@@ -1,0 +1,37 @@
+$base-color: #9FB7A6;
+$base-light-color: #9FB7A6;
+$base-dark-color: #9EBDA8;
+@import url(https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap);
+
+
+$secondary-color : #FCF7E8;
+$secondary-light-color : #F8F6F0;
+$secondary-dark-color : #FFCF3E;
+
+
+body {
+    font-size: 24;
+    font-family: 'Ubuntu', sans-serif;
+    background-color: $secondary-light-color;
+    margin: 0;
+}
+
+.nav-container {
+    padding: .5em 0;
+    height: 2em;
+    background-color: $base-color;
+    top: 0;
+    left: 0;
+    box-shadow: 0 .2em .2em rgba(0, 0, 0, 0.25);
+}
+
+#nav-heading{
+    margin: .25em 1em;
+    display: inline;
+}
+
+#nav-username{
+    display: inline;
+    float: right;
+    margin-right: 3em;
+}
