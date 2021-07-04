@@ -99,11 +99,35 @@ class Home extends Base {
 }
 
 class Signin extends Base {
+    constructor(props){
+        super(props)
+        this.state = { ...this.state, signup:true}
+        this.changeState = this.changeState.bind(this)
+    }
+
+    renderForm(){
+        if (this.state.signup)
+        return <span>Sign up</span>
+        else
+        return <span>Sign in</span>
+    }
+
+    changeState() {
+        this.setState(prevState => ({
+                ...this.state,
+                signup:!prevState.signup
+            })
+        )
+    }
+
     render() {
         return (
         <div>
             {this.renderMenu()}
-            <div className="content-container">Sign in</div>
+            <div className="content-container">
+            {this.renderForm()}
+            <button onClick={this.changeState}>Click</button>
+            </div>
         </div>
         )
     }
