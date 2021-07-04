@@ -1,34 +1,68 @@
+const Link = ReactRouterDOM.Link;
+const Route = ReactRouterDOM.Route;
+
+
+
+class App extends React.Component{
+    render(){
+        return(
+        <ReactRouterDOM.HashRouter>
+          <Route path="/" exact component={Home} />
+          <Route path="/signin" exact component={Signin} />
+          {/* <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} /> */}
+        </ReactRouterDOM.HashRouter>
+        )    
+    }
+}
 
 class Menu extends React.Component{
+    
+    renderLogedin = () => {
+        if (this.props.login)
+        return <div id="menu-username">{this.props.username}</div>
+        else (this.props.login)
+        return <div id="menu-username"><Link to="/signin">Sign in</Link></div>
+    }
+
     render(){
         return (
             <div className="menu-container">
-                <div id="menu-heading">Neural Wirer</div>
-                <div id="menu-username">{this.props.username}</div>
+                <div id="menu-heading"><Link to="/">Neural Wirer</Link></div>
+                {this.renderLogedin()}
             </div>
         )
     }
 }
+
+class SidebarButton extends React.Component{
+    render (){
+        return (
+            <div className="sidebar-button"><Link to={this.props.url}>{this.props.name}</Link></div>
+        )
+    }
+}
+
 
 class Sidebar extends React.Component{
     render(){
         return (
             <div className="sidebar-container">
-                sidebar desu
+                <SidebarButton name="Home" url=""/>
             </div>
         )
     }
 }
 
 
-class App extends React.Component {
+class Base extends React.Component {
     
     constructor(props){
         super(props)
         this.state = { user : 0, login: false}
         this.getLogedin()
     }
-
+    
     getLogedin = () => {
         fetch("/api/user")
         .then(response => response.json())
@@ -42,17 +76,38 @@ class App extends React.Component {
             })
         });
     }
-
-    render() {
-        return (
+    renderMenu = () => {
+        return ( 
         <div>
-            <Menu username={this.state.user.username}/>
+            <Menu username={this.state.user.username} login={this.state.login}/>
             <Sidebar />
-            <div className="content-container">Hello World</div>
         </div>
         
         )
     }
+}
+
+class Home extends Base {
+    render() {
+        return (
+        <div>
+            {this.renderMenu()}
+            <div className="content-container">Hello World</div>
+        </div>
+        )
+    }
+}
+
+class Signin extends Base {
+    render() {
+        return (
+        <div>
+            {this.renderMenu()}
+            <div className="content-container">Sign in</div>
+        </div>
+        )
+    }
+
 }
 
 ReactDOM.render(<App />, document.getElementById("app"))

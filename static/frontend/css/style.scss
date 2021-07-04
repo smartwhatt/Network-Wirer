@@ -4,6 +4,7 @@ $base-dark-color: #9EBDA8;
 
 $base-text-color: #000000;
 $base-text-light: #F8F6F0;
+$base-text-dark: #252525;
 
 $secondary-color : #FCF7E8;
 $secondary-light-color : #F8F6F0;
@@ -11,19 +12,30 @@ $secondary-dark-color : #FFCF3E;
 
 $secondary-text-color : #791D34;
 
-
 @import url(https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap);
-
-body {
-    font-size: 24px;
-    font-family: 'Ubuntu', sans-serif;
-    background-color: $secondary-light-color;
-    margin: 0;
+@media only screen and (orientation: portrait) {
+    body {
+        font-size: 16px;
+        font-family: 'Ubuntu', sans-serif;
+        background-color: $secondary-light-color;
+        margin: 0;
+    }
 }
+
+@media only screen and (orientation: landscape) {
+    body {
+        font-size: 24px;
+        font-family: 'Ubuntu', sans-serif;
+        background-color: $secondary-light-color;
+        margin: 0;
+    }
+}
+
 
 .menu-container {
     padding: .5em 0;
-    height: 2em;
+    // height: 2em;
+    padding: 0.5em;
     width: 100vw;
     background-color: $base-color;
     top: 0;
@@ -33,26 +45,58 @@ body {
 }
 
 #menu-heading{
-    margin: .25em 1.5em;
+    margin: .1em 1.5em;
     display: inline;
 }
-
+#menu-heading a, #menu-heading a:hover{
+    text-decoration: none;
+    color: $base-text-color;
+}
 #menu-username{
+    font-size: .75em;
     display: inline;
     float: right;
-    margin-right: 3em;
+    margin: .2em 3em;
+}
+#menu-username a, #menu-username a:hover{
+    text-decoration: none;
+    color: $base-text-dark;
 }
 
 .sidebar-container{
     height: 100vh;
-    width: 4em;
+    // width: 3em;
     padding-top: 5em;
     padding-left: 1em;
+    padding-right: 1em;
     position: fixed;
     z-index:-1;
     background-color: $base-light-color;
+    top: 0;
+    left: 0;
+}
+
+.sidebar-button{
+    color: $base-text-light;
+    box-shadow: 0 .2em .2em rgba(0, 0, 0, 0.25);
+    height: 1em;
+    // width: 100%;
+    padding: .5em;
+    margin: .25em;
+    border-radius: .75em;
+    z-index:1;
+    background-color: $base-dark-color;
+}
+
+.sidebar-button a, .sidebar-button a:focus{
+    color: $base-text-light;
+    text-decoration: none;
+}
+
+.sidebar-button:hover{
+    opacity: 80%;
 }
 
 .content-container {
-    padding: 4em 6em;
+    margin: 4em 8em;
 }
