@@ -1,24 +1,29 @@
 $base-color: #9FB7A6;
 $base-light-color: #BED2C4;
+
 $base-dark-color: #9EBDA8;
+$base-darker-color: #7E8C79;
 
 $base-text-color: #000000;
 $base-text-light: #F8F6F0;
 $base-text-dark: #252525;
-
+$white : #FFFFFF;
 $secondary-color : #FCF7E8;
 $secondary-light-color : #F8F6F0;
 $secondary-dark-color : #FFCF3E;
-
+$secondary-lightest-color: #FFFCF3;
+$secondary-lighter-color: #FCF7E8;
 $secondary-text-color : #791D34;
 
 @import url(https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap);
 @media only screen and (orientation: portrait) {
     body {
-        font-size: 16px;
+        font-size: 12px;
         font-family: 'Ubuntu', sans-serif;
         background-color: $secondary-light-color;
         margin: 0;
+        position:relative ;
+        z-index: -4;
     }
 }
 
@@ -28,15 +33,24 @@ $secondary-text-color : #791D34;
         font-family: 'Ubuntu', sans-serif;
         background-color: $secondary-light-color;
         margin: 0;
+        position:relative; 
+        z-index: -4;
     }
 }
-
+.div-container{
+    z-index: -2;
+    position:relative 
+}
+#app{
+    position:relative ;
+    z-index: -3;
+}
 
 .menu-container {
     padding: .5em 0;
     // height: 2em;
     padding: 0.5em;
-    width: 100vw;
+    width: 100%;
     background-color: $base-color;
     top: 0;
     left: 0;
@@ -64,7 +78,7 @@ $secondary-text-color : #791D34;
 }
 
 .sidebar-container{
-    height: 100vh;
+    height: 100%;
     // width: 3em;
     padding-top: 5em;
     padding-left: 1em;
@@ -84,8 +98,9 @@ $secondary-text-color : #791D34;
     padding: .5em;
     margin: .25em;
     border-radius: .75em;
-    z-index:1;
+    z-index:+1;
     background-color: $base-dark-color;
+    transition: .2s ease-in-out;
 }
 
 .sidebar-button a, .sidebar-button a:focus{
@@ -99,4 +114,84 @@ $secondary-text-color : #791D34;
 
 .content-container {
     margin: 4em 8em;
+}
+
+.login-form-container{
+    margin: 2em;
+    padding : 1em 10em;
+    width: 20em;
+    background-color: $secondary-lightest-color;
+    box-shadow: 0 .2em .2em rgba(0, 0, 0, 0.25);
+    border-radius: 1em;
+    // transition: .3s ease-in-out;
+}
+
+.selector {
+    // width: 50%;
+    margin: 0 auto;
+    width: fit-content;
+    font-size: 1.5em;
+}
+
+
+#signup{
+    display: inline;
+    margin-right: .5em;
+}
+
+#signin{
+    display: inline;
+}
+
+#signin.active ~ hr.slider{
+    margin-left: 52.5%;
+}
+
+hr.slider {
+    height: .1rem;
+    width: 50%;
+    margin: 0;
+    background: $secondary-dark-color;
+    border: none;
+    transition: .3s ease-in-out;
+  }
+
+form{
+    text-align: center;
+}
+.textInput{
+      background-color: $secondary-lighter-color;
+      padding: .5em;
+      margin: .5em 0.75em;
+      height: .25em;
+    //   width: 25em;
+      font-size: 1.5em;
+      border-radius: .25em;
+      border: none;
+      box-shadow: 0 .05em .05em rgba(0, 0, 0, 0.25);
+  }
+
+input:focus{
+    outline: none;
+}
+
+.submitButton{
+    margin: 2em;
+    border-radius: 1em;
+    background-color: $base-darker-color;
+    padding: 1em 2em;
+    color: $white;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    // outline: none;
+    border: none;
+    transition: .2s ease-in-out;
+    font-size: .5em;
+    display: inline;
+}
+.submitButton:hover, .submitButton:focus{
+    opacity: 80%;
+}
+
+.error{
+    color: red;
 }
