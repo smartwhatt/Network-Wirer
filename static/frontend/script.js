@@ -36,6 +36,7 @@ class App extends React.Component{
         <ReactRouterDOM.HashRouter>
           <Route path="/" exact component={Home} />
           <Route path="/signin" exact component={Signin} />
+          <Route path="/logout" exact component={Logout} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -47,7 +48,12 @@ class Menu extends React.Component{
     
     renderLogedin = () => {
         if (this.props.login)
-        return <div id="menu-username">{this.props.username}</div>
+        return <div id="menu-username">
+            {this.props.username}
+            <div className="dropdown-content">
+                <Link to="/logout">Logout</Link>
+                </div>
+            </div>
         else (this.props.login)
         return <div id="menu-username"><Link to="/signin">Sign in</Link></div>
     }
@@ -65,7 +71,9 @@ class Menu extends React.Component{
 class SidebarButton extends React.Component{
     render (){
         return (
-            <div className="sidebar-button"><Link to={this.props.url}>{this.props.name}</Link></div>
+            <div className="sidebar-button">
+                <Link to={this.props.url}>{this.props.name}</Link>
+            </div>
         )
     }
 }
@@ -314,5 +322,26 @@ class Signin extends Base {
     }
 
 }
+
+class Logout extends Base {
+    constructor(props){
+        super(props)
+        this.logOut()
+    }
+
+    logOut(){
+        fetch("/api/logout")
+        .then(response => response.json())
+        .then(message => {
+
+            
+        });
+    }
+
+    render() {
+        return <Redirect to="/" />
+    }
+}
+
 
 ReactDOM.render(<App />, document.getElementById("app"))

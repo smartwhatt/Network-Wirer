@@ -58,6 +58,19 @@ $secondary-text-color : #791D34;
     position: fixed;
 }
 
+.dropdown-content{
+    position: absolute;
+    background-color: $base-darker-color;
+    margin-right: 1em;
+    padding: .5em;
+    border-radius: .2em;
+    display: none;
+}
+#menu-username:hover .dropdown-content {
+    display: block;
+    transition: .3s ease-in-out;
+}
+
 #menu-heading{
     margin: .1em 1.5em;
     display: inline;
