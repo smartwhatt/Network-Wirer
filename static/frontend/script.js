@@ -37,6 +37,7 @@ class App extends React.Component{
           <Route path="/" exact component={Home} />
           <Route path="/signin" exact component={Signin} />
           <Route path="/logout" exact component={Logout} />
+          <Route path="/dataset" exact component={Datasets} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -83,7 +84,9 @@ class Sidebar extends React.Component{
     render(){
         return (
             <div className="sidebar-container">
-                <SidebarButton name="Home" url=""/>
+                <SidebarButton name="Home" url="/home"/>
+                <SidebarButton name="Datasets" url="/dataset"/>
+                <SidebarButton name="Models" url="/"/>
             </div>
         )
     }
@@ -340,6 +343,158 @@ class Logout extends Base {
 
     render() {
         return <Redirect to="/" />
+    }
+}
+
+class Datasets extends Base {
+    constructor(props){
+        super(props)
+        this.state = {
+            ...this.state, 
+            all:true,
+            query:"",
+            loading:false,
+            data: null
+            // loading:true
+           }
+        this.updateQuery = this.updateQuery.bind(this)
+        this.renderDatasetView = this.renderDatasetView.bind(this)
+        this.renderDataState = this.renderDataState.bind(this)
+        this.SetAll = this.SetAll.bind(this)
+        this.SetU = this.SetU.bind(this)
+        this.renderDataTable = this.renderDataTable.bind(this)
+    }
+
+    SetAll() {
+        this.setState(prevState => ({
+                ...this.state,
+                all:true,
+                data:null
+            })
+        )
+    }
+    SetU() {
+        this.setState(prevState => ({
+                ...this.state,
+                all:false,
+                data:null
+            })
+        )
+    }
+
+    updateQuery(event){
+        this.setState(prevState => ({
+            ...this.state,
+            query:event.target.value
+        })
+    )
+    }
+    renderDataState(){
+        if(this.state.login && this.state.all){
+            return(
+            <div className="dataSelector">
+                    <div id="allData" onClick={this.SetAll}>All Dataset</div>
+                    <div id="uData" onClick={this.SetU}>Your Dataset</div>
+                    <hr className="slider" />
+                    
+            </div>
+            )
+        }
+        else if(!this.state.all)
+        return (
+            <div className="dataSelector">
+            <div id="allData" onClick={this.SetAll}>All Dataset</div>
+            <div id="uData" className="active" onClick={this.SetU}>Your Dataset</div>
+            <hr className="slider" />
+        </div>
+        )
+        else 
+        return (
+        <div className="dataSelector">
+            <div id="allData" onClick={this.SetAll}>All Dataset</div>
+            <div id="uData" className="inactive">Your Dataset</div>
+            <hr className="slider" />
+        </div>
+        )
+    }
+
+    
+
+    renderDataTable(){
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.all && this.state.data === null){
+            this.setState({ loading: true }, () => {
+                fetch("/api/dataset")
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message
+                    })
+                    
+                });
+            });
+            
+            
+        }
+        else if (this.state.data !== null){
+            return (
+                <table className="datasetTable">
+                    <tr className="topRow">
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                    </tr>
+                    {this.state.data.map((dataset, index) =>{
+                        return(
+                            <tr>
+                                 <td className="name">{dataset.name}</td> {/* have to be link */}
+                                <td className="description">{dataset.description}</td>
+                                <td className="owner">{dataset.owner.username}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            )
+        }
+    }
+
+    renderDatasetView(){
+        return (
+            <div class="datasetsView">
+                {this.renderDataState()}
+                {this.renderDataTable()}
+            </div>
+        )
+    }
+
+
+    render() {
+        return (
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                    <div className="pageHeader">Datasets</div>
+                    
+                    <form className="searchForm">
+                        <input className="searchInput" placeholder="Search..." type="search" value={this.state.query} onChange={this.updateQuery}></input>
+                        <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
+                    </form>
+                    <div className="importButton">Import</div> {/* change this to link later */}
+                    {this.renderDatasetView()}
+                </div>
+                
+            </div>
+        
+        )
     }
 }
 

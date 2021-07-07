@@ -8,10 +8,12 @@ $base-text-color: #000000;
 $base-text-light: #F8F6F0;
 $base-text-dark: #252525;
 $white : #FFFFFF;
+
 $secondary-color : #FCF7E8;
 $secondary-light-color : #F8F6F0;
 $secondary-dark-color : #FFCF3E;
 $secondary-lightest-color: #FFFCF3;
+$secondary-color-table: #F6F1DF;
 $secondary-lighter-color: #FCF7E8;
 $secondary-text-color : #791D34;
 
@@ -35,6 +37,12 @@ $secondary-text-color : #791D34;
     .submitButton{
         font-size: 2em;
     }
+    .searchInput{
+        width: 7.5em;
+    }
+    .searchIcon{
+        display: none;
+    }
 }
 
 @media only screen and (orientation: landscape) {
@@ -45,6 +53,12 @@ $secondary-text-color : #791D34;
         margin: 0;
         position:relative; 
         z-index: -4;
+    }
+    .searchInput{
+        width: calc(25vw + 10em);
+    }
+    .searchIcon{
+        display: inline;
     }
 }
 .div-container{
@@ -119,10 +133,11 @@ $secondary-text-color : #791D34;
     height: 1em;
     // width: 100%;
     padding: .5em;
-    margin: .25em;
+    margin: 1em 0;
     border-radius: .75em;
     z-index:+1;
     background-color: $base-dark-color;
+    text-align: center;
     transition: .2s ease-in-out;
 }
 
@@ -172,7 +187,7 @@ $secondary-text-color : #791D34;
 
 hr.slider {
     height: .1rem;
-    width: 50%;
+    width: 45%;
     margin: 0;
     background: $secondary-dark-color;
     border: none;
@@ -217,4 +232,151 @@ input:focus{
 
 .error{
     color: red;
+}
+
+
+.pageHeader{
+    font-size: 2em;
+}
+
+.searchInput{
+    background-color: $secondary-lighter-color;
+    border-radius: 0.5em;
+    max-height: 2em;
+    padding: .4em;
+    font-size: 1em;
+    float: left;
+    margin: 1em .25em 1em 1em ;
+    border: none;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    display: inline;
+    transition: .2s ease-in-out;
+}
+
+.searchInput:hover, .searchInput:focus{
+    opacity: 90%;
+}
+
+.searchIcon{
+    float: left;
+    background-color: $secondary-lightest-color;
+    padding: .4em;
+    font-size: 1em;
+    position: relative;
+    border: none;
+    // display: inline;
+    border-radius: 0.5em;
+    margin-top: 1em;
+    transition: .2s ease-in-out;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+}
+
+.searchIcon:hover{
+    background-color: $secondary-lighter-color;
+}
+
+.importButton {
+    background-color: $secondary-lighter-color;
+    border-radius: 0.5em;
+    padding: .4em;
+    font-size: 1em;
+    float: left;
+    margin: 1em ;
+    border: none;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    display: inline;
+    transition: .2s ease-in-out;
+}
+.importButton:hover{
+    opacity: 80%;
+}
+
+.dataSelector{
+    width: fit-content;
+    margin: 1.5em;
+    hr.slider{
+        margin-left: 4%;
+    }
+}
+
+#allData{
+    display: inline;
+    margin:0 .5em;
+}
+#uData{
+    display: inline;
+}
+#uData.active~hr.slider{
+    margin-left: 50%;
+}
+#uData.inactive{
+    opacity: 50%;
+}
+
+.spinner-container{
+    margin: 0 25%;
+    width: fit-content;
+
+}
+
+// spinner code
+
+.lds-ring {
+    display: inline-block;
+    position: relative;
+    width: 5em;
+    height: 5em;
+  }
+  .lds-ring div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 4em;
+    height: 4em;
+    margin: .3em;
+    border: .3em solid #fff;
+    border-radius: 50%;
+    animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: $secondary-text-color transparent transparent transparent;
+  }
+  .lds-ring div:nth-child(1) {
+    animation-delay: -0.45s;
+  }
+  .lds-ring div:nth-child(2) {
+    animation-delay: -0.3s;
+  }
+  .lds-ring div:nth-child(3) {
+    animation-delay: -0.15s;
+  }
+  @keyframes lds-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+// end of spinner code
+
+.datasetTable{
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0.5em 2em;
+
+    th,td{
+        padding: .5em;
+    }
+    .topRow th{
+        border-bottom: solid .1em;
+    }
+    tr:nth-child(even){
+        background-color: $secondary-color-table;
+    }
+    td.name {
+        color:$secondary-text-color;
+    }
+    td.description {
+        width: 20em;
+    }
 }
