@@ -59,7 +59,8 @@ MIDDLEWARE = [
 ]
 
 STATICFILES_FINDERS = [
-    "compressor.finders.CompressorFinder"
+    "compressor.finders.CompressorFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder"
 ]
 
 ROOT_URLCONF = 'capstone.urls'
@@ -132,6 +133,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 AUTH_USER_MODEL = "api.User"
 
@@ -141,3 +143,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media_root")
 COMPRESS_PRECOMPILERS = (
     ('text/x-scss', 'django_libsass.SassCompiler'),
 )
+
+STATICFILES_DIRS = [
+    ('admin', os.path.join(BASE_DIR, 'static', 'admin'))
+]
