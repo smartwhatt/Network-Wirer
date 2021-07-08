@@ -84,7 +84,7 @@ class Sidebar extends React.Component{
     render(){
         return (
             <div className="sidebar-container">
-                <SidebarButton name="Home" url="/home"/>
+                <SidebarButton name="Home" url="/"/>
                 <SidebarButton name="Datasets" url="/dataset"/>
                 <SidebarButton name="Models" url="/"/>
             </div>
