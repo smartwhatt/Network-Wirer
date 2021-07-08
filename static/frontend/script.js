@@ -354,8 +354,8 @@ class Datasets extends Base {
             all:true,
             query:"",
             loading:false,
-            data: null
-            // loading:true
+            data: null,
+            searchResult:false
            }
         this.updateQuery = this.updateQuery.bind(this)
         this.renderDatasetView = this.renderDatasetView.bind(this)
@@ -363,13 +363,15 @@ class Datasets extends Base {
         this.SetAll = this.SetAll.bind(this)
         this.SetU = this.SetU.bind(this)
         this.renderDataTable = this.renderDataTable.bind(this)
+        this.searchDatasets = this.searchDatasets.bind(this)
     }
 
     SetAll() {
         this.setState(prevState => ({
                 ...this.state,
                 all:true,
-                data:null
+                data:null,
+                searchResult:false
             })
         )
     }
@@ -377,7 +379,8 @@ class Datasets extends Base {
         this.setState(prevState => ({
                 ...this.state,
                 all:false,
-                data:null
+                data:null,
+                searchResult:false
             })
         )
     }
@@ -418,7 +421,25 @@ class Datasets extends Base {
         )
     }
 
-    
+    searchDatasets(){
+        if(this.state.query !== ""){
+            this.setState({ loading: true }, () => {
+                fetch(`/api/dataset?query=${this.state.query}`)
+                .then(response => response.json())
+                .then(message => {
+                    console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchResult:true,
+                        query:""
+                    })
+                    
+                });
+            });
+        }
+    }
 
     renderDataTable(){
         if (this.state.loading){
@@ -428,7 +449,7 @@ class Datasets extends Base {
                 </div>
             )
         }
-        else if (this.state.all && this.state.data === null){
+        else if (this.state.all && this.state.data === null && this.state.searchResult===false){
             this.setState({ loading: true }, () => {
                 fetch("/api/dataset")
                 .then(response => response.json())
@@ -437,15 +458,30 @@ class Datasets extends Base {
                     this.setState({
                         ...this.state,
                         loading:false,
-                        data:message
+                        data:message,
+                        searchDatasets:false
                     })
                     
                 });
             });
-            
-            
         }
-        else if (this.state.data !== null){
+        else if (!this.state.all && this.state.data === null && this.state.searchResult===false){
+            this.setState({ loading: true }, () => {
+                fetch("/api/user/dataset")
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchDatasets:false
+                    })
+                    
+                });
+            });
+        }
+        else if (this.state.data !== null && this.state.searchResult===false){
             return (
                 <table className="datasetTable">
                     <tr className="topRow">
@@ -454,6 +490,28 @@ class Datasets extends Base {
                         <th>Owner</th>
                     </tr>
                     {this.state.data.map((dataset, index) =>{
+                        // console.log(this.state.data)
+                        return(
+                            <tr>
+                                 <td className="name">{dataset.name}</td> {/* have to be link */}
+                                <td className="description">{dataset.description}</td>
+                                <td className="owner">{dataset.owner.username}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            )
+        }
+        else if (this.state.data !== null && this.state.searchResult){
+            return (
+                <table className="datasetTable">
+                    <tr className="topRow">
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                    </tr>
+                    {this.state.data.map((dataset, index) =>{
+                        // console.log(this.state.data)
                         return(
                             <tr>
                                  <td className="name">{dataset.name}</td> {/* have to be link */}
@@ -484,7 +542,7 @@ class Datasets extends Base {
                 <div className="content-container">
                     <div className="pageHeader">Datasets</div>
                     
-                    <form className="searchForm">
+                    <form className="searchForm" onSubmit={this.searchDatasets}>
                         <input className="searchInput" placeholder="Search..." type="search" value={this.state.query} onChange={this.updateQuery}></input>
                         <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
                     </form>

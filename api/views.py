@@ -1,3 +1,4 @@
+from re import search
 from django.shortcuts import render
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -9,7 +10,9 @@ from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from .serializers import *
 from rest_framework.renderers import TemplateHTMLRenderer
+from django.db.models import Q
 from rest_framework.views import APIView
+# from django.contrib.postgres.search import SearchVector
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
 
 # Create your views here.
@@ -147,7 +150,12 @@ def update_user(request, id):
 def dataset(request):
 
     if request.method == "GET":
-        datasets = Dataset.objects.all()
+        if request.GET.get("query") is not None:
+            query = request.GET.get("query")
+            datasets = Dataset.objects.filter(
+                Q(name__icontains=query) | Q(description__icontains=query) | Q(owner__username__icontains=query))
+        else:
+            datasets = Dataset.objects.all()
         serializer = DatasetSerializer(datasets, many=True)
         return Response(serializer.data)
 
@@ -168,3 +176,15 @@ def dataset(request):
                 return Response({"message": "Name field or file field is not provided"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['PUT', "GET"])
+def user_items(request, action):
+    if not request.user.is_authenticated:
+        return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if action == "dataset":
+        if request.method == "GET":
+            datasets = request.user.libraries
+            serializer = DatasetSerializer(datasets, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)

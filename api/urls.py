@@ -8,5 +8,6 @@ urlpatterns = [
     path("logout", views.logout_view, name="api_logout"),
     path("user", views.authenticated_user, name="api_user"),
     path("user/<int:id>", views.update_user, name="api_update_user"),
+    path("user/<str:action>", views.user_items, name="api_update_user"),
     path("dataset", views.dataset, name="api_dataset")
 ]
