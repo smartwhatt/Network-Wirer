@@ -363,9 +363,13 @@ input:focus{
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0.5em 2em;
+    
+    
 
     th,td{
         padding: .5em;
+        // border: none;
+        // border-style : hidden!important;
     }
     .topRow th{
         border-bottom: solid .1em;
