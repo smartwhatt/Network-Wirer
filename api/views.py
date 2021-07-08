@@ -147,7 +147,7 @@ def update_user(request, id):
 
 
 @api_view(['GET', "POST"])
-def dataset(request):
+def datasets(request):
 
     if request.method == "GET":
         if request.GET.get("query") is not None:
@@ -188,3 +188,11 @@ def user_items(request, action):
             datasets = request.user.libraries
             serializer = DatasetSerializer(datasets, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT', "GET", "DELETE"])
+def dataset(request, pk):
+    if request.method == "GET":
+        dataset = Dataset.objects.get(pk=pk)
+        serializer = DatasetSerializer(dataset)
+        return Response(serializer.data, status=status.HTTP_200_OK)

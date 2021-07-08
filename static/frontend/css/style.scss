@@ -7,6 +7,7 @@ $base-darker-color: #7E8C79;
 $base-text-color: #000000;
 $base-text-light: #F8F6F0;
 $base-text-dark: #252525;
+$base-text-less-dark: #5E5E5E;
 $white : #FFFFFF;
 
 $secondary-color : #FCF7E8;
@@ -363,6 +364,11 @@ input:focus{
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0.5em 2em;
+
+    a{
+        text-decoration: none;
+        color: inherit;
+    }
     
     
 
@@ -382,5 +388,79 @@ input:focus{
     }
     td.description {
         width: 20em;
+    }
+}
+
+.datasetHeader{
+    font-size: 2em;
+    color:$secondary-text-color;
+    // display: inline;
+    .datasetButton{
+        padding: .5em;
+        margin: 1em;
+        width: fit-content;
+        display: inline;
+        background-color: $secondary-lighter-color;
+        border-radius: .5em;
+        box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+        font-size: .5em;
+        color: $base-text-dark;
+        transition: .3s ease-in-out;
+        cursor: pointer;
+        border: none;
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+    }
+    .datasetButton:hover{
+        opacity: 80%;
+    }
+}
+.datasetDescription{
+    background-color: $secondary-lighter-color;
+    margin: 1em;
+    height: 20vh;
+    width: 40vw;
+    padding: .5em;
+    border-radius: .5em;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+
+    span{
+        color: $base-text-less-dark;
+    }
+    p {
+        margin: 0;
+        margin-left: 1em;
+        font-size: .75em;
+    }
+}
+
+.datasetDetail{
+    background-color: $secondary-lighter-color;
+    margin: 1em;
+    width: 50vw;
+    padding: .5em;
+    border-radius: .5em;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+
+    .datasetSelector{
+        width: fit-content;
+
+        #detail{
+            display: inline;
+            margin-right: .5em;
+        }
+        #table{
+            display: inline;
+        }
+        hr.slider{
+            width: 50%;
+        }
+
+        #table.active ~ hr.slider{
+            margin-left: 55%;
+        }
     }
 }

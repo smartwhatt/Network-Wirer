@@ -1,6 +1,7 @@
 const Link = ReactRouterDOM.Link;
 const Route = ReactRouterDOM.Route;
 const Redirect = ReactRouterDOM.Redirect;
+const useParams   = ReactRouter.useParams;
 
 function getCookies() {
     var c = document.cookie, v = 0, cookies = {};
@@ -38,6 +39,7 @@ class App extends React.Component{
           <Route path="/signin" exact component={Signin} />
           <Route path="/logout" exact component={Logout} />
           <Route path="/dataset" exact component={Datasets} />
+          <Route path="/dataset/:id" exact component={Dataset} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -493,7 +495,7 @@ class Datasets extends Base {
                         // console.log(this.state.data)
                         return(
                             <tr>
-                                 <td className="name">{dataset.name}</td> {/* have to be link */}
+                                 <td className="name"><Link to={`/dataset/${dataset.id}`}>{dataset.name}</Link></td> {/* have to be link */}
                                 <td className="description">{dataset.description}</td>
                                 <td className="owner">{dataset.owner.username}</td>
                             </tr>
@@ -514,7 +516,7 @@ class Datasets extends Base {
                         // console.log(this.state.data)
                         return(
                             <tr>
-                                 <td className="name">{dataset.name}</td> {/* have to be link */}
+                                 <td className="name"><Link to={`/dataset/${dataset.id}`}>{dataset.name}</Link></td> {/* have to be link */}
                                 <td className="description">{dataset.description}</td>
                                 <td className="owner">{dataset.owner.username}</td>
                             </tr>
@@ -552,6 +554,142 @@ class Datasets extends Base {
                 
             </div>
         
+        )
+    }
+}
+
+class Dataset extends Base {
+    constructor(props){
+        super(props)
+        const id = props.match.params.id
+        this.state = {
+            ...this.state,
+            dataset: null,
+            loading:false,
+            dataLoaded:false,
+            id:id,
+            detail:true
+           }
+        // this.getDataset = this.getDataset.bind(this)
+        this.renderDataset = this.renderDataset.bind(this)
+        this.renderDetailCard = this.renderDetailCard.bind(this)
+        this.changeState = this.changeState.bind(this)
+    }
+
+    changeState() {
+        this.setState(prevState => ({
+                ...this.state,
+                detail:!prevState.detail
+            })
+        )
+    }
+
+    getKeys(){
+        if (this.state.detail){
+            const summary = JSON.parse(this.state.dataset.summary)
+            console.log(typeof(summary))
+            return Object.keys(summary)
+        }
+        else{
+            const dataset = JSON.parse(this.state.dataset.dataset)
+            return Object.keys(dataset)
+        }
+    }
+
+    
+
+    renderDetailCard(){
+        if (this.state.detail && this.state.dataset !== null){
+            return(
+                <div className="datasetDetail">
+                    <div className="datasetSelector">
+                        <div id="detail">Detail</div>
+                        <div id="table" onClick={this.changeState}>Table</div>
+                        <hr className="slider" />
+                    </div>
+                    <div className="dataTable">
+                        <table>
+                            {
+                                this.getKeys().map((key, index) => {
+                                    return <th key={key}>{key.toUpperCase()}</th>
+                                })
+                            }
+                        </table>
+                    </div>
+                </div>
+            )
+        }
+        else{
+            return(
+                <div className="datasetDetail">
+                    <div className="datasetSelector">
+                        <div id="detail" onClick={this.changeState}>Detail</div>
+                        <div id="table" className="active">Table</div>
+                        <hr className="slider" />
+                    </div>
+                </div>
+            )
+        }
+    }
+
+    renderDataset(){
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        
+        else if (this.state.dataset === null && this.state.dataLoaded === false){
+            // console.log(this.state.dataset === null && this.state.dataLoaded === false)
+            this.setState({ loading: true }, () => {
+                fetch(`/api/dataset/${this.state.id}`)
+                .then(response => response.json())
+                .then(message => {
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        dataset:message,
+                        dataLoaded:true
+                    })
+                });
+            });
+        }
+        else if (this.state.dataset !== null && this.state.dataLoaded)
+        return( 
+            <div>
+                <div className="datasetHeader">
+                    {this.state.dataset.name}
+                    <div>
+                        <button className="datasetButton">
+                            <a href={this.state.dataset.upload}>Download</a>
+                        </button>
+                        <button className="datasetButton">
+                            <Link to="/">Add to library</Link>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="datasetDescription">
+                    <span>Description</span>
+                    <p>{this.state.dataset.description}</p>
+                </div>
+                {this.renderDetailCard()}
+                {/* {console.log(this.state.dataset.summary)} */}
+                
+            </div>
+        )
+    }
+
+    render() {
+        return (
+        <div className="div-container">
+            {this.renderMenu()}
+            <div className="content-container">
+                {this.renderDataset()}
+            </div>
+        </div>
         )
     }
 }
