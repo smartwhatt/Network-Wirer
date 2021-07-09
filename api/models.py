@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.deletion import CASCADE
 from .model_fields.datatype import *
+from django.core.validators import FileExtensionValidator
 # Create your models here.
 
 
@@ -21,7 +22,8 @@ class Dataset(models.Model):
     libraryOf = models.ManyToManyField(
         User, blank=True, related_name="libraries")
     # types = models.CharField(max_length=16 , choices=dataType)
-    upload = models.FileField(upload_to=data_directory_path)
+    upload = models.FileField(upload_to=data_directory_path, validators=[
+                              FileExtensionValidator(allowed_extensions=['csv'])])
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
