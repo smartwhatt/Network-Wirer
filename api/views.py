@@ -194,5 +194,5 @@ def user_items(request, action):
 def dataset(request, pk):
     if request.method == "GET":
         dataset = Dataset.objects.get(pk=pk)
-        serializer = DatasetSerializer(dataset)
+        serializer = DatasetDetailSerializer(dataset)
         return Response(serializer.data, status=status.HTTP_200_OK)

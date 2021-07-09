@@ -440,10 +440,12 @@ input:focus{
 .datasetDetail{
     background-color: $secondary-lighter-color;
     margin: 1em;
-    width: 50vw;
+    min-width: fit-content;
+    width: 40vw;
     padding: .5em;
     border-radius: .5em;
     box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    
 
     .datasetSelector{
         width: fit-content;
@@ -462,5 +464,33 @@ input:focus{
         #table.active ~ hr.slider{
             margin-left: 55%;
         }
+    }
+    .dataTable{
+        margin: 1em;
+        
+        display: block;
+        table{
+        border-collapse: collapse;
+        border-radius: .25em;
+        border-style: none;
+        // border-color: $secondary-text-color;
+        // overflow: hidden;
+        
+        td, th{
+            text-align: center;
+            padding: .5em;
+            max-width: 10em;
+            border: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        tr:nth-child(even){
+            background-color: $secondary-color-table;
+        }
+        thead:nth-child(1){
+            border-bottom: solid black;
+        }
+    }
     }
 }

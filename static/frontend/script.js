@@ -574,6 +574,7 @@ class Dataset extends Base {
         this.renderDataset = this.renderDataset.bind(this)
         this.renderDetailCard = this.renderDetailCard.bind(this)
         this.changeState = this.changeState.bind(this)
+        this.renderTable = this.renderTable.bind(this)
     }
 
     changeState() {
@@ -583,16 +584,12 @@ class Dataset extends Base {
             })
         )
     }
-
-    getKeys(){
+    renderTable(){
         if (this.state.detail){
-            const summary = JSON.parse(this.state.dataset.summary)
-            console.log(typeof(summary))
-            return Object.keys(summary)
+            return <div className="dataTable" dangerouslySetInnerHTML={{__html: this.state.dataset.summary.trim()}}></div>
         }
-        else{
-            const dataset = JSON.parse(this.state.dataset.dataset)
-            return Object.keys(dataset)
+        else if (this.state.detail===false){
+            return <div className="dataTable" dangerouslySetInnerHTML={{__html: this.state.dataset.dataset.trim()}}></div>
         }
     }
 
@@ -607,15 +604,7 @@ class Dataset extends Base {
                         <div id="table" onClick={this.changeState}>Table</div>
                         <hr className="slider" />
                     </div>
-                    <div className="dataTable">
-                        <table>
-                            {
-                                this.getKeys().map((key, index) => {
-                                    return <th key={key}>{key.toUpperCase()}</th>
-                                })
-                            }
-                        </table>
-                    </div>
+                    {this.renderTable()}
                 </div>
             )
         }
@@ -627,6 +616,7 @@ class Dataset extends Base {
                         <div id="table" className="active">Table</div>
                         <hr className="slider" />
                     </div>
+                    {this.renderTable()}
                 </div>
             )
         }
