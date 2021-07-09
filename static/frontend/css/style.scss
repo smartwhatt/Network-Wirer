@@ -44,6 +44,11 @@ $secondary-text-color : #791D34;
     .searchIcon{
         display: none;
     }
+    .datasetTable{
+        td, th{
+            max-width: 6em;
+        }
+    }
 }
 
 @media only screen and (orientation: landscape) {
@@ -373,11 +378,14 @@ input:focus{
     
     
 
-    th,td{
-        padding: .5em;
-        // border: none;
-        // border-style : hidden!important;
-    }
+    td, th{
+            padding: .5em;
+            max-width: 20em;
+            border: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     .topRow th{
         border-bottom: solid .1em;
     }
@@ -494,4 +502,20 @@ input:focus{
         }
     }
     }
+}
+
+.searchContainer{
+    display: block;
+}
+
+#data{
+    display: inline;
+    margin-right: 1em;
+}
+#model{
+    display: inline;
+}
+
+#model.active ~ hr.slider{
+    margin-left: 60%;
 }

@@ -185,8 +185,28 @@ def user_items(request, action):
 
     if action == "dataset":
         if request.method == "GET":
-            datasets = request.user.libraries
+            datasets = request.user.datasets
             serializer = DatasetSerializer(datasets, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if action == "library":
+        if request.method == "GET":
+            datasets = request.user.libraries
+            if request.GET.get("query") is not None:
+                query = request.GET.get("query")
+                datasets = datasets.filter(Q(name__icontains=query) | Q(
+                    description__icontains=query) | Q(owner__username__icontains=query))
+
+            serializer = DatasetSerializer(datasets, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == "PUT":
+            try:
+                datasets = Dataset.objects.get(pk=request.data["id"])
+            except ObjectDoesNotExist:
+                return Response({"message": "This dataset cannot be found"})
+
+            datasets.libraryOf.add(request.user)
+            serializer = DatasetSerializer(datasets)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 

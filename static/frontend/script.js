@@ -40,6 +40,8 @@ class App extends React.Component{
           <Route path="/logout" exact component={Logout} />
           <Route path="/dataset" exact component={Datasets} />
           <Route path="/dataset/:id" exact component={Dataset} />
+          <Route path="/library" exact component={Library} />
+          <Route path="/library/add/:id" exact component={AddLibrary} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -83,12 +85,19 @@ class SidebarButton extends React.Component{
 
 
 class Sidebar extends React.Component{
+
+    renderLibrary(){
+        if(this.props.login){
+            return <SidebarButton name="Library" url="/library"/>
+        }
+    }
     render(){
         return (
             <div className="sidebar-container">
                 <SidebarButton name="Home" url="/"/>
                 <SidebarButton name="Datasets" url="/dataset"/>
                 <SidebarButton name="Models" url="/"/>
+                {this.renderLibrary()}
             </div>
         )
     }
@@ -120,7 +129,7 @@ class Base extends React.Component {
         return ( 
         <div>
             <Menu username={this.state.user.username} login={this.state.login}/>
-            <Sidebar />
+            <Sidebar login={this.state.login} />
         </div>
         
         )
@@ -176,8 +185,9 @@ class Signin extends Base {
                     <hr className="slider" />
                 </div>
                 <form onSubmit={this.signIn}>
-                    <input type="text" placeholder="Username" className="textInput" id="username" autofocus="true" value={this.state.username} onChange={this.updateUsername}></input>
-                    <input type="password" placeholder="Password" className="textInput" id="password" value={this.state.password} onChange={this.updatePassword}></input>
+                    <input type="text" placeholder="Username" className="textInput" id="username" autocomplete="username" autofocus="true" value={this.state.username} onChange={this.updateUsername}></input>
+                    <input type="password" placeholder="Password" className="textInput" id="current-password" autocomplete="password" value={this.state.password} onChange={this.updatePassword}></input>
+                    {this.checkAlert("Password or Username incorrect")}
                     <input type="submit" className="submitButton" value="Sign in"></input>
                     <div className="submitButton" onClick={this.changeState} >Sign Up?</div>
                 </form>
@@ -193,41 +203,44 @@ class Signin extends Base {
                 </div>
                 <form onSubmit={this.signUp}>
                     <input type="text" placeholder="Username" className="textInput" id="username" autofocus="true" value={this.state.username} onChange={this.updateUsername}></input>
-                    <input type="email" placeholder="Email" className="textInput" id="email" value={this.state.email} onChange={this.updateEmail}></input>
-                    <input type="password" placeholder="Password" className="textInput" id="password" value={this.state.password} onChange={this.updatePassword}></input>
-                    <input type="password" placeholder="Confirm Password" className="textInput" id="password2" value={this.state.conf_password} onChange={this.updateConPass}></input>
-                    {this.checkAlert()}
+                    <input type="email" placeholder="Email" className="textInput" id="email" autocomplete="email" value={this.state.email} onChange={this.updateEmail}></input>
+                    <input type="password" placeholder="Password" className="textInput" autocomplete="current-password" id="password" value={this.state.password} onChange={this.updatePassword}></input>
+                    <input type="password" placeholder="Confirm Password" className="textInput" autocomplete="confirm-password" id="password2" value={this.state.conf_password} onChange={this.updateConPass}></input>
+                    {this.checkAlert("The passwords you entered do not match")}
                     <input type="submit" className="submitButton" value="Sign up"></input>
                     <div className="submitButton" onClick={this.changeState} >Sign In?</div>
                 </form>
             </div>
             )
     }
-    checkAlert(){
+    checkAlert(message){
         if(this.state.passAlert){
         
-        return <span className="error">The passwords you entered do not match</span>
+        return <span className="error">{message}</span>
         }
     }
 
     changeState() {
         this.setState(prevState => ({
                 ...this.state,
-                signup:!prevState.signup
+                signup:!prevState.signup,
+                passAlert:false
             })
         )
     }
     SetSignin() {
         this.setState(prevState => ({
                 ...this.state,
-                signup:false
+                signup:false,
+                passAlert:false
             })
         )
     }
     SetSignup() {
         this.setState(prevState => ({
                 ...this.state,
-                signup:true
+                signup:true,
+                passAlert:false
             })
         )
     }
@@ -270,7 +283,17 @@ class Signin extends Base {
             "password": this.state.password
         })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok){
+                this.setState(prevState => ({
+                    ...this.state,
+                    passAlert:true
+                }),() => {return false;}
+                )
+            }
+            else
+            return response.json()
+        })
         .then(result => {
             // Print result
             this.setState(prevState => ({
@@ -279,6 +302,9 @@ class Signin extends Base {
             })
             )
             return false
+        })
+        .catch(error => {
+            console.error(error)
         });
     }
     signUp(){
@@ -656,7 +682,7 @@ class Dataset extends Base {
                             <a href={this.state.dataset.upload}>Download</a>
                         </button>
                         <button className="datasetButton">
-                            <Link to="/">Add to library</Link>
+                            <Link to={`/library/add/${this.state.dataset.id}`}>Add to library</Link>
                         </button>
                     </div>
                 </div>
@@ -684,5 +710,224 @@ class Dataset extends Base {
     }
 }
 
+class Library extends Base{
+    constructor(props){
+        super(props)
+        // const id = props.match.params.id
+        this.state = {
+            ...this.state,
+            data: null,
+            loading:false,
+            query:"",
+            searchResult:false,
+            dataset:true
+           }
+        this.searchDatasets = this.searchDatasets.bind(this)
+        this.updateQuery = this.updateQuery.bind(this)
+        this.renderDataTable = this.renderDataTable.bind(this)
+        this.changeState = this.changeState.bind(this)
+        this.renderDataState = this.renderDataState.bind(this)
+    }
+
+    searchDatasets(){
+        if(this.state.query !== ""){
+            this.setState({ loading: true }, () => {
+                fetch(`/api/user/library?query=${this.state.query}`)
+                .then(response => response.json())
+                .then(message => {
+                    console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchResult:true,
+                        query:"",
+                        dataset:true
+                    })
+                    
+                });
+            });
+        }
+    }
+
+    changeState() {
+        this.setState(prevState => ({
+                ...this.state,
+                dataset:!prevState.dataset,
+                searchResult:false,
+                data:null
+            })
+        )
+    }
+
+    renderDataState(){
+        if(this.state.dataset){
+            return(
+            <div className="dataSelector">
+                    <div id="data">Dataset</div>
+                    <div id="model" onClick={this.changeState}>Model</div>
+                    <hr className="slider" />
+                    
+            </div>
+            )
+        }
+        else if(!this.state.dataset)
+        return (
+            <div className="dataSelector">
+            <div id="data" onClick={this.changeState}>Dataset</div>
+            <div id="model" className="active">Model</div>
+            <hr className="slider" />
+        </div>
+        )
+    }
+
+    renderDataTable(){
+        // console.log(this.state.data === null && this.state.searchResult===false)
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.data === null && this.state.searchResult===false){
+            this.setState({ loading: true }, () => {
+                fetch("/api/user/library")
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchDatasets:false
+                    })
+                    
+                });
+            });
+        }
+        else if (this.state.data !== null && this.state.searchResult===false && this.state.dataset){
+            return (
+                <table className="datasetTable">
+                    <tr className="topRow">
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                    </tr>
+                    {this.state.data.map((dataset, index) =>{
+                        // console.log(this.state.data)
+                        return(
+                            <tr>
+                                 <td className="name"><Link to={`/dataset/${dataset.id}`}>{dataset.name}</Link></td> {/* have to be link */}
+                                <td className="description">{dataset.description}</td>
+                                <td className="owner">{dataset.owner.username}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            )
+        }
+        else if (this.state.data !== null && this.state.searchResult && this.state.dataset){
+            return (
+                <table className="datasetTable">
+                    <tr className="topRow">
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                    </tr>
+                    {this.state.data.map((dataset, index) =>{
+                        // console.log(this.state.data)
+                        return(
+                            <tr>
+                                 <td className="name"><Link to={`/dataset/${dataset.id}`}>{dataset.name}</Link></td> {/* have to be link */}
+                                <td className="description">{dataset.description}</td>
+                                <td className="owner">{dataset.owner.username}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            )
+        }
+    }
+
+    updateQuery(event){
+        this.setState(prevState => ({
+            ...this.state,
+            query:event.target.value
+        })
+    )
+    }
+
+    render(){
+        if (this.state.login)
+        return(
+            <div className="div-container">
+            {this.renderMenu()}
+            <div className="content-container">
+                <div className="pageHeader">Library</div>
+
+                <div className="searchContainer">
+                    <form className="searchForm" onSubmit={this.searchDatasets}>
+                        <input className="searchInput" placeholder="Search..." type="search" value={this.state.query} onChange={this.updateQuery}></input>
+                        <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
+                    </form>
+                </div>
+                {this.renderDataState()}
+                <div class="datasetsView">
+                    {this.renderDataTable()}
+                </div>
+            </div>
+        </div>
+        )
+        else
+        return(
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                    <div className="pageHeader">Library</div>
+                    <span className="error">User not logged in</span><br />
+                    <Link to="signin">Login here</Link>
+                </div>
+            </div>
+        ) 
+    }
+}
+
+class AddLibrary extends Base {
+    constructor(props){
+        super(props)
+        this.addLibrary()
+        this.state = {
+            ...this.state,
+            loading:true
+           }
+    }
+
+    addLibrary(){
+        fetch("/api/user/library", {
+            method: 'PUT',
+            headers: { "Content-Type": "application/json; charset=UTF-8", 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({
+                "id": this.props.match.params.id
+            })
+            })
+        .then(response => response.json())
+        .then(message => {
+            this.setState({
+                ...this.state,
+                loading:false
+            })
+        });
+    }
+
+    render() {
+        if(!this.state.loading)
+        return <Redirect to="/library" />
+        else
+        return <div className="spinner-container">
+        <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </div>
+    }
+}
 
 ReactDOM.render(<App />, document.getElementById("app"))
