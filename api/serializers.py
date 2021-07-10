@@ -10,13 +10,6 @@ class DatasetSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-class DatasetUploadSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=32)
-    description = serializers.CharField(default="")
-    upload = serializers.FileField(validators=[
-        FileExtensionValidator(allowed_extensions=['csv'])])
-
-
 class DatasetDetailSerializer(serializers.ModelSerializer):
     dataset = serializers.SerializerMethodField("get_dataset")
     summary = serializers.SerializerMethodField("get_dataset_summary")
