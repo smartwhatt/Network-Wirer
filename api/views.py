@@ -4,7 +4,7 @@ from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from .models import *
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
@@ -12,6 +12,7 @@ from .serializers import *
 from rest_framework.renderers import TemplateHTMLRenderer
 from django.db.models import Q
 from rest_framework.views import APIView
+import pandas as pd
 # from django.contrib.postgres.search import SearchVector
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
 
@@ -147,6 +148,7 @@ def update_user(request, id):
 
 
 @api_view(['GET', "POST"])
+# @parser_classes([MultiPartParser])
 def datasets(request):
 
     if request.method == "GET":
@@ -161,19 +163,22 @@ def datasets(request):
 
     if request.method == "POST":
         if request.user.is_authenticated:
-            try:
-                file = request.data['file']
-                dataset = Dataset(
-                    name=request.data["name"], owner=request.user, upload=file)
-                dataset.save()
-                dataset.libraryOf.add(request.user)
-                if request.data.get("description") is not None:
-                    dataset.description = request.data["description"]
-                dataset.save()
-                serializer = DatasetSerializer(dataset)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            except request.data.get("name") is None:
+
+            if request.data.get("name") is None:
                 return Response({"message": "Name field or file field is not provided"}, status=status.HTTP_400_BAD_REQUEST)
+            print(request.data)
+
+            file = request.data["file"]
+            dataset = Dataset(
+                name=request.data["name"], owner=request.user, upload=file)
+            dataset.save()
+            dataset.libraryOf.add(request.user)
+            if request.data.get("description") is not None:
+                dataset.description = request.data["description"]
+            dataset.save()
+            serializer = DatasetSerializer(dataset)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         else:
             return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -216,3 +221,13 @@ def dataset(request, pk):
         dataset = Dataset.objects.get(pk=pk)
         serializer = DatasetDetailSerializer(dataset)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@parser_classes([FileUploadParser])
+def preview(request, type):
+    if type == "dataset":
+        file = request.data["file"]
+        csv = pd.read_csv(file)
+        csv = csv.head(25)
+        return Response({"table": csv.to_html()})

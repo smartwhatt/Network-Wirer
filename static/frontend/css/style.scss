@@ -239,6 +239,7 @@ input:focus{
 
 .error{
     color: red;
+    display: block;
 }
 
 
@@ -293,6 +294,12 @@ input:focus{
     box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
     display: inline;
     transition: .2s ease-in-out;
+    cursor: pointer;
+
+    a{
+        color: inherit;
+        text-decoration: none;
+    }
 }
 .importButton:hover{
     opacity: 80%;
@@ -518,4 +525,119 @@ input:focus{
 
 #model.active ~ hr.slider{
     margin-left: 60%;
+}
+
+
+.importForm{
+    padding: 1em;
+    text-align: left;
+
+    .pageHeader{
+        display: inline;
+    }
+    .submitButton{
+        display: inline;
+        float: right;
+        margin-top: 0;
+        padding: 1em 2em;
+        font-size: .6em;
+    }
+    .importInput{
+        background-color: $secondary-lighter-color;
+        padding: .75em .5em;
+        margin: .5em 2em;
+        height: .25em;
+        min-width: fit-content;
+        width: 40vw;
+        max-width: 60vw;
+        font-size: 1.5em;
+        border-radius: .25em;
+        border: none;
+        box-shadow: 0 .05em .05em rgba(0, 0, 0, 0.25);
+        display: block;
+    }
+
+    .dataDropBox{
+        background-color: $secondary-lighter-color;
+        margin: .5em 3em;
+        height: 30vh;
+        text-align: center;
+        max-width: 60vw;
+        width: 50vw;
+        min-width: fit-content;
+        vertical-align: middle;
+        padding: 1em;
+        border-radius: .25em;
+        transition: .3s ease-in-out;
+        box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    }
+    .dataDropBox:hover{
+        opacity: 50%;
+    }
+    .error{
+        margin: 1em 3em;
+    }
+    input#file{
+        display: none;
+    }
+    .importTextarea{
+        background-color: $secondary-lighter-color;
+        padding: .75em .5em;
+        margin: .5em 2em;
+        min-height: 1em;
+        height: fit-content;
+        min-width: fit-content;
+        width: 40vw;
+        max-width: 60vw;
+        font-size: 1.5em;
+        border-radius: .25em;
+        border: none;
+        box-shadow: 0 .05em .05em rgba(0, 0, 0, 0.25);
+        display: block;
+    }
+    .importTextarea:focus{
+        border: none;
+        outline: none;
+    }
+
+    .previewCard{
+        background-color: $secondary-lighter-color;
+        margin: .5em 3em;
+        height: fit-content;
+        padding: 2em;
+        max-width: 60vw;
+        width: 30vw;
+        min-width: fit-content;
+        vertical-align: middle;
+        padding: 1em;
+        border-radius: .25em;
+        transition: .3s ease-in-out;
+        box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+
+        table{
+            border-collapse: collapse;
+            border-radius: .25em;
+            border-style: none;
+            height: inherit;
+            width: inherit;
+            // border-color: $secondary-text-color;
+            // overflow: hidden;
+            
+            td, th{
+                text-align: center;
+                padding: .5em;
+                max-width: 10em;
+                border: none;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            tr:nth-child(even){
+                background-color: $secondary-color-table;
+            }
+            thead:nth-child(1){
+                border-bottom: solid black;
+            }
+        }
+    }
 }

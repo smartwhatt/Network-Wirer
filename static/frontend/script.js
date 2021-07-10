@@ -42,6 +42,7 @@ class App extends React.Component{
           <Route path="/dataset/:id" exact component={Dataset} />
           <Route path="/library" exact component={Library} />
           <Route path="/library/add/:id" exact component={AddLibrary} />
+          <Route path="/import/dataset" exact component={ImportDataset} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -574,7 +575,7 @@ class Datasets extends Base {
                         <input className="searchInput" placeholder="Search..." type="search" value={this.state.query} onChange={this.updateQuery}></input>
                         <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
                     </form>
-                    <div className="importButton">Import</div> {/* change this to link later */}
+                    <div className="importButton"><Link to="/import/dataset">Import</Link></div> {/* change this to link later */}
                     {this.renderDatasetView()}
                 </div>
                 
@@ -929,5 +930,228 @@ class AddLibrary extends Base {
         </div>
     }
 }
+
+class ImportDataset extends Base {
+    constructor(props){
+        super(props)
+        // const id = props.match.params.id
+        this.state = {
+            ...this.state,
+            loading:false,
+            title:"",
+            file:null,
+            description:"",
+            redirect:false,
+            alert:false,
+            message:"",
+            preview:false,
+            table:null
+            // dataset:true
+           }
+        this.updateTitle = this.updateTitle.bind(this)
+        this.checkAlert = this.checkAlert.bind(this)
+        this.dropHandle = this.dropHandle.bind(this)
+        this.uploadClick = this.uploadClick.bind(this)
+        this.uploadhandle = this.uploadhandle.bind(this)
+        this.renderDataTable = this.renderDataTable.bind(this)
+        this.updateDes= this.updateDes.bind(this)
+        this.submitForm = this.submitForm.bind(this)
+    }
+    checkAlert(){
+        if (this.state.alert)
+        return <span className="error">{this.state.message}</span>
+    }
+
+    updateTitle(event){
+        this.setState(prevState => ({
+            ...this.state,
+            title:event.target.value
+        })
+    )
+    }
+    updateDes(event){
+        this.setState(prevState => ({
+            ...this.state,
+            description:event.target.value
+        }))
+    }
+
+    renderDataTable(){
+        // console.log(this.state.data === null && this.state.searchResult===false)
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.file !== null && this.state.preview===false){
+            // console.log(this.state.file)
+            this.setState({ loading: true }, () => {
+                fetch("/api/preview/dataset", {
+                    method: 'POST',
+                    headers: { 
+                        "Content-Type": "application/json; charset=UTF-8", 
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        "Content-Disposition": `attachment; filename="${this.state.file.name}" `
+                    },
+                    body: this.state.file
+                })
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        table:message,
+                        preview:true,
+                        table:message.table
+                    })
+                    
+                });
+            });
+        }
+        else if (this.state.preview){
+            // console.log(this.state.table.trim())
+            return <div className="dataTable" dangerouslySetInnerHTML={{__html: this.state.table}}></div>
+        }
+    }
+
+    uploadhandle(event){
+        event.preventDefault()
+        let file = event.target.files[0]
+        if (file.name.split('.').pop()==="csv")
+                    this.setState({
+                        ...this.state,
+                        file:file
+                    })
+                else
+                this.setState({
+                    ...this.state,
+                    alert:true,
+                    message:"File extension \"csv\" only accepted"
+                })
+    }
+
+    dropHandle(event){
+        event.preventDefault();
+        this.setState({
+            ...this.state,
+            preview:false
+        }, () =>{
+            // console.log("file dropped")
+        if (event.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the file(s)
+            for (var i = 0; i < event.dataTransfer.items.length; i++) {
+              // If dropped items aren't files, reject them
+              if (event.dataTransfer.items[i].kind === 'file') {
+                var file = event.dataTransfer.items[i].getAsFile();
+                // console.log(file.name);
+                if (file.name.split('.').pop()==="csv")
+                    this.setState({
+                        ...this.state,
+                        file:file
+                    })
+                else
+                this.setState({
+                    ...this.state,
+                    alert:true,
+                    message:"File extension \"csv\" only accepted"
+                })
+              }
+            }
+          } else {
+            // Use DataTransfer interface to access the file(s)
+            for (var i = 0; i < event.dataTransfer.files.length; i++) {
+            //   console.log('... file[' + i + '].name = ' + event.dataTransfer.files[i].name.split('.').pop());
+              if (event.dataTransfer.files[i].name.split('.').pop()==="csv")
+                this.setState({
+                    ...this.state,
+                    file:event.dataTransfer.files[i]
+                })
+              else
+                this.setState({
+                    ...this.state,
+                    alert:true,
+                    message:"File extension \"csv\" only accepted"
+                })
+              
+            }
+          }
+        })
+        
+    }
+    uploadClick(){
+        document.querySelector("#file").click()
+    }
+
+    submitForm(){
+        if(this.state.title==="" || this.state.file === null){
+            this.setState({
+                ...this.state,
+                alert:true,
+                message:"Form not filled correctly"
+            })
+        }
+        else{
+            var formData  = new FormData();
+            formData.append("name", this.state.title);
+            // console.log(formData)
+            formData.append("description", this.state.description);
+            // console.log(formData)
+            formData.append("file", this.state.file);
+            console.log(formData)
+            fetch("/api/dataset", {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(message => {
+                console.log(message)
+                this.setState({
+                    ...this.state,
+                    redirect:true
+                })
+                
+            });
+        }
+    }
+
+    render(){
+        if (this.state.redirect)
+            return <Redirect to="/library" />
+        
+        return(
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                    <form className="importForm" onSubmit={this.submitForm}>
+                        <div className="pageHeader">Import Dataset</div>
+                        <button className="submitButton" type="submit">Submit</button>
+                        {this.checkAlert()}
+                        <input className="importInput" placeholder="Title..." value={this.state.title} onChange={this.updateTitle}></input>
+                        <textarea className="importTextarea" placeholder="Description..." rows="3" contenteditable value={this.state.description} onChange={this.updateDes}></textarea>
+                        <div className="dataDropBox" onDrop={this.dropHandle} onClick={this.uploadClick}>
+                            <span>Drop file here to upload</span>
+                            <input type="file" id="file" onChange={this.uploadhandle} accept=".csv"></input>
+                        </div>
+                        <div className="previewCard">
+                            <span>Preview</span>
+                            {this.renderDataTable()}
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+        ) 
+    }
+}
+
+window.ondragover = function(e) { e.preventDefault(); return false };
+window.ondrop = function(e) { e.preventDefault(); return false };
+
 
 ReactDOM.render(<App />, document.getElementById("app"))

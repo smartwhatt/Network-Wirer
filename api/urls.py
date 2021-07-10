@@ -10,5 +10,6 @@ urlpatterns = [
     path("user/<int:id>", views.update_user, name="api_update_user"),
     path("user/<str:action>", views.user_items, name="api_update_user"),
     path("dataset", views.datasets, name="api_datasets"),
-    path("dataset/<int:pk>", views.dataset, name="api_dataset")
+    path("dataset/<int:pk>", views.dataset, name="api_dataset"),
+    path("preview/<str:type>", views.preview, name="api_preview")
 ]
