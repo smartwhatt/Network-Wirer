@@ -36,3 +36,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         exclude = ['password']
         depth = 1
+
+
+class NetworkModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NeuralNetworkModel
+        depth = 1
+        fields = "__all__"

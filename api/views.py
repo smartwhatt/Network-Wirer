@@ -12,7 +12,12 @@ from .serializers import *
 from rest_framework.renderers import TemplateHTMLRenderer
 from django.db.models import Q
 from rest_framework.views import APIView
+from django.core.files import File
+import json
 import pandas as pd
+import h5py
+from tensorflow import keras
+import os
 # from django.contrib.postgres.search import SearchVector
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
 
@@ -231,3 +236,27 @@ def preview(request, type):
         csv = pd.read_csv(file)
         csv = csv.head(25)
         return Response({"table": csv.to_html()})
+
+
+@api_view(['GET', 'POST'])
+def models(request):
+    if request.method == "GET":
+        models = NeuralNetworkModel.objects.all()
+        serializer = NetworkModelSerializer(models, many=True)
+        return Response(serializer.data)
+    if request.method == "POST":
+        model_data = json.dumps(request.data["model"])
+        model = keras.models.model_from_json(
+            model_data, custom_objects=None)
+        # print(model.summary())
+        temp = "/tmp/model-{}.h5".format(request.session.session_key)
+        # temp = "/tmp/model-{}.h5".format(request.data["name"])
+        model.save(temp)
+        f = File(h5py.File(temp, mode='r'), name=os.path.basename(temp))
+        models = NeuralNetworkModel.objects.create(
+            name="test model", description="test description", owner=request.user)
+        models.upload.save("model", f)
+        # models.save()
+        os.remove(temp)
+        serializer = NetworkModelSerializer(models)
+        return Response(serializer.data)

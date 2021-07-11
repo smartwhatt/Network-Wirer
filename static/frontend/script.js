@@ -1150,6 +1150,34 @@ class ImportDataset extends Base {
     }
 }
 
+class Test extends Base {
+
+    fetchModel(){
+        const model = tf.sequential({
+            layers: [
+              tf.layers.dense({inputShape: [784], units: 32, activation: 'relu'}),
+              tf.layers.dense({units: 10, activation: 'softmax'}),
+            ]
+           });
+        fetch("/api/model", {
+            method: 'POST',
+            headers: { "Content-Type": "application/json; charset=UTF-8", "X-CSRFToken": getCookie('csrftoken') },
+            body: JSON.stringify({
+                "model":JSON.parse(model.toJSON())
+                })
+            })
+        .then(response => response.json())
+        .then(message => {
+            console.log(message)
+        })
+    }
+    render(){
+        return (
+            {}
+        )
+    }
+}
+
 window.ondragover = function(e) { e.preventDefault(); return false };
 window.ondrop = function(e) { e.preventDefault(); return false };
 
