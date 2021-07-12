@@ -17,7 +17,7 @@ def data_directory_path(instance, filename):
 
 def model_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return 'models/user_{0}/{1}'.format(instance.owner.id, filename)
+    return 'models/user_{0}/{1}/{2}'.format(instance.owner.id, instance.id, filename)
 
 
 class Dataset(models.Model):
@@ -43,7 +43,9 @@ class NeuralNetworkModel(models.Model):
     #     User, blank=True, related_name="modelLibraries")
     # types = models.CharField(max_length=16 , choices=dataType)
     upload = models.FileField(upload_to=model_directory_path, validators=[
-                              FileExtensionValidator(allowed_extensions=['json', 'h5'])])
+                              FileExtensionValidator(allowed_extensions=['json'])])
+    weight = models.FileField(upload_to=model_directory_path, validators=[
+                              FileExtensionValidator(allowed_extensions=['bin'])])
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

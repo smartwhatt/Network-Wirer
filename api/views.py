@@ -13,10 +13,13 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from django.db.models import Q
 from rest_framework.views import APIView
 from django.core.files import File
+from django.core.files.base import ContentFile
+import base64
 import json
 import pandas as pd
 import h5py
 from tensorflow import keras
+import tensorflowjs as tfjs
 import os
 # from django.contrib.postgres.search import SearchVector
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
@@ -245,18 +248,53 @@ def models(request):
         serializer = NetworkModelSerializer(models, many=True)
         return Response(serializer.data)
     if request.method == "POST":
+        if not request.user.is_authenticated:
+            return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if request.data.get("model") is None or request.data.get("weight") is None or request.data.get("name") is None:
+            return Response({"message": "name or model or weight data is not present"}, status=status.HTTP_400_BAD_REQUEST)
         model_data = json.dumps(request.data["model"])
-        model = keras.models.model_from_json(
-            model_data, custom_objects=None)
-        # print(model.summary())
-        temp = "/tmp/model-{}.h5".format(request.session.session_key)
-        # temp = "/tmp/model-{}.h5".format(request.data["name"])
-        model.save(temp)
-        f = File(h5py.File(temp, mode='r'), name=os.path.basename(temp))
+        weight_data = base64.decodebytes(
+            request.data["weight"].encode("ascii"))
+        # print(weight_data)
+        f = ContentFile(model_data)
+        weight = ContentFile(weight_data)
         models = NeuralNetworkModel.objects.create(
-            name="test model", description="test description", owner=request.user)
-        models.upload.save("model", f)
+            name=request.data["name"], description=request.data["description"], owner=request.user, upload=f, weight=weight)
+        models.upload.save("model.json", f)
+        models.weight.save("{}.weights.bin".format(
+            request.data["name"]), weight)
         # models.save()
-        os.remove(temp)
+        # os.remove(temp)
         serializer = NetworkModelSerializer(models)
         return Response(serializer.data)
+
+
+@api_view(['GET', 'PUT'])
+def model(request, pk):
+    if request.method == "GET":
+        models = NeuralNetworkModel.objects.get(pk=pk)
+        serializer = NetworkModelSerializer(models, many=True)
+        return Response(serializer.data)
+    if request.method == "PUT":
+        if not request.user.is_authenticated:
+            return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if request.data.get("train") is not None:
+            if request.data.get("model") is None or request.data.get("dataset") is None:
+                return Response({"message": "model or dataset id is not provided"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+"""
+{
+    "model":1,
+    "dataset": {
+        "id":1,
+        "train":"Tweets",
+        "label":"Labels",
+        "train_filter":[],
+        "label_filter":[],
+        
+    }
+}
+"""

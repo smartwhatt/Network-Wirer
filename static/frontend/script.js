@@ -1159,12 +1159,23 @@ class Test extends Base {
               tf.layers.dense({units: 10, activation: 'softmax'}),
             ]
            });
-        fetch("/api/model", {
+           let model_name = "test"
+           const saveModel = model.save(`localstorage://${model_name}`);
+           fetch("/api/model", {
             method: 'POST',
-            headers: { "Content-Type": "application/json; charset=UTF-8", "X-CSRFToken": getCookie('csrftoken') },
+            headers: { "Content-Type": "application/json; charset=UTF-8","X-CSRFToken": getCookie('csrftoken') },
             body: JSON.stringify({
-                "model":JSON.parse(model.toJSON())
-                })
+                "model":{
+                    "modelTopology":JSON.parse(localStorage.getItem(`tensorflowjs_models/${model_name}/model_topology`)),
+                    "weightsManifest":[{
+                        "paths":[`./${model_name}.weights.bin`],
+                        "weights":JSON.parse(localStorage.getItem(`tensorflowjs_models/${model_name}/weight_specs`))
+                        }
+                    ]},
+                "weight":localStorage.getItem(`tensorflowjs_models/${model_name}/weight_data`),
+                "name":model_name,
+                "description":"",
+            })
             })
         .then(response => response.json())
         .then(message => {
