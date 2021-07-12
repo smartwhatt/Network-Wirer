@@ -377,6 +377,7 @@ input:focus{
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0.5em 2em;
+    
 
     a{
         text-decoration: none;
@@ -458,9 +459,14 @@ input:focus{
     margin: 1em;
     min-width: fit-content;
     width: 40vw;
+    max-width: 60vw;
     padding: .5em;
     border-radius: .5em;
     box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    border: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     
 
     .datasetSelector{
@@ -489,6 +495,8 @@ input:focus{
         border-collapse: collapse;
         border-radius: .25em;
         border-style: none;
+        max-width: 20em;
+        
         // border-color: $secondary-text-color;
         // overflow: hidden;
         

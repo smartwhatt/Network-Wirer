@@ -21,6 +21,8 @@ import h5py
 from tensorflow import keras
 import tensorflowjs as tfjs
 import os
+from sklearn.utils import shuffle
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder
 # from django.contrib.postgres.search import SearchVector
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
 
@@ -272,8 +274,11 @@ def models(request):
 
 @api_view(['GET', 'PUT'])
 def model(request, pk):
-    if request.method == "GET":
+    try:
         models = NeuralNetworkModel.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        return Response({"message": "This Model cannot be found"})
+    if request.method == "GET":
         serializer = NetworkModelSerializer(models, many=True)
         return Response(serializer.data)
     if request.method == "PUT":
@@ -283,6 +288,21 @@ def model(request, pk):
         if request.data.get("train") is not None:
             if request.data.get("model") is None or request.data.get("dataset") is None:
                 return Response({"message": "model or dataset id is not provided"}, status=status.HTTP_401_UNAUTHORIZED)
+            try:
+                dataset = Dataset.objects.get(pk=request.data["dataset"]["id"])
+            except ObjectDoesNotExist:
+                return Response({"message": "This Dataset cannot be found"})
+
+            df = pd.read_csv(dataset.upload.path)
+            if request.data["dataset"]["id"] is not None or request.data["dataset"]["field"] == []:
+                df = df[request.data["dataset"]["field"]]
+            else:
+                df = df
+            data = df.values
+            train, label = data[:, :-1], data[:, -1]
+            train, label = shuffle(train, label)
+
+            model = tfjs.converters.load_keras_model(models.upload.path)
 
 
 """
@@ -290,11 +310,11 @@ def model(request, pk):
     "model":1,
     "dataset": {
         "id":1,
-        "train":"Tweets",
-        "label":"Labels",
-        "train_filter":[],
-        "label_filter":[],
-        
+        //assuming the last 
+        "field":[] // if none then all
+        "train_filter":[], // optional
+        "label_filter":[], // optional
+
     }
 }
 """
