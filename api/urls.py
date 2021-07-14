@@ -12,5 +12,6 @@ urlpatterns = [
     path("dataset", views.datasets, name="api_datasets"),
     path("dataset/<int:pk>", views.dataset, name="api_dataset"),
     path("preview/<str:type>", views.preview, name="api_preview"),
-    path("model", views.models, name="api_models")
+    path("model", views.models, name="api_models"),
+    path("model/<int:pk>", views.model, name="api_model")
 ]

@@ -19,10 +19,12 @@ import json
 import pandas as pd
 import h5py
 from tensorflow import keras
+import numpy as np
 import tensorflowjs as tfjs
 import os
 from sklearn.utils import shuffle
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder
+from .filters.filters import applyFilter
+from sklearn.model_selection import train_test_split
 # from django.contrib.postgres.search import SearchVector
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser, FileUploadParser
 
@@ -279,30 +281,50 @@ def model(request, pk):
     except ObjectDoesNotExist:
         return Response({"message": "This Model cannot be found"})
     if request.method == "GET":
-        serializer = NetworkModelSerializer(models, many=True)
+        serializer = NetworkModelSerializer(models)
         return Response(serializer.data)
     if request.method == "PUT":
         if not request.user.is_authenticated:
             return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
 
         if request.data.get("train") is not None:
-            if request.data.get("model") is None or request.data.get("dataset") is None:
-                return Response({"message": "model or dataset id is not provided"}, status=status.HTTP_401_UNAUTHORIZED)
+            if request.data.get("dataset") is None:
+                return Response({"message": "dataset id is not provided"}, status=status.HTTP_401_UNAUTHORIZED)
             try:
                 dataset = Dataset.objects.get(pk=request.data["dataset"]["id"])
             except ObjectDoesNotExist:
                 return Response({"message": "This Dataset cannot be found"})
 
             df = pd.read_csv(dataset.upload.path)
-            if request.data["dataset"]["id"] is not None or request.data["dataset"]["field"] == []:
+            if request.data.get("dataset").get("field") is not None:
                 df = df[request.data["dataset"]["field"]]
             else:
                 df = df
             data = df.values
             train, label = data[:, :-1], data[:, -1]
             train, label = shuffle(train, label)
+            train = np.asarray(train).astype(np.float32)
 
+            if request.data.get("dataset").get("train_filter") is not None:
+                train = applyFilter(
+                    train, request.data["dataset"]["train_filter"])
+            if request.data.get("dataset").get("label_filter") is not None:
+                label = applyFilter(
+                    label, request.data["dataset"]["label_filter"])
             model = tfjs.converters.load_keras_model(models.upload.path)
+            model.compile(
+                optimizer='adam', loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+            history = model.fit(x=train, y=label, validation_split=0.2,
+                                epochs=request.data["epoch"], shuffle=True)
+            if models.dataset is not None:
+                models.dataset = dataset
+                models.save()
+            os.remove(models.upload.path)
+            tfjs.converters.save_keras_model(
+                model, 'media_root/models/user_{0}/{1}'.format(request.user.id, models.id))
+            # print(model.evaluate(train, label, batch_size=128))
+
+            return Response(history.history)
 
 
 """
@@ -316,5 +338,7 @@ def model(request, pk):
         "label_filter":[], // optional
 
     }
+    "epoch":50,
+    "train":true
 }
 """
