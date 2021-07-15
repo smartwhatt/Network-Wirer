@@ -30,6 +30,17 @@ function getCookies() {
 function getCookie(name) {
     return getCookies()[name];
 }
+const range = (min, max) => Array.from({ length: max - min + 1 }, (_, i) => min + i);
+Array.prototype.remove = function() {
+    var what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
+};
 
 class App extends React.Component{
     render(){
@@ -50,6 +61,35 @@ class App extends React.Component{
         </ReactRouterDOM.HashRouter>
         )    
     }
+}
+
+class LineChart extends React.Component{
+    constructor(props) {
+        super(props);
+        this.chartRef = React.createRef();
+      }
+    
+      componentDidMount() {
+        this.myChart = new Chart(this.chartRef.current, {
+          type: 'line',
+          data: {
+            labels: range(1, this.props.data.length),
+            datasets: [{
+              label: this.props.title,
+              data: this.props.data,
+              backgroundColor: this.props.color,
+              borderColor: this.props.color,
+              tension: 0.1
+            }]
+          }
+        });
+      }
+    
+
+
+    render() {
+        return <canvas ref={this.chartRef} />
+      }
 }
 
 class Menu extends React.Component{
@@ -1346,13 +1386,196 @@ class Model extends Base {
             data:null,
             model:null,
             getDataset:false,
-            modelData:null
+            modelData:null,
+            selectedDataset: null,
+            table:null,
+            preview:false,
+            dataset:null,
+            fields:[],
+            label:-1,
+            train_filter:[],
+            label_filter:[],
+            epoch:5,
+            training:false,
+            result:null
            }
         this.renderModel = this.renderModel.bind(this)
+        this.selectedDatasetHandle = this.selectedDatasetHandle.bind(this)
+        this.renderPreview = this.renderPreview.bind(this)
+        this.renderTrainForm = this.renderTrainForm.bind(this)
+        this.addField = this.addField.bind(this)
+        this.chooseLabel = this.chooseLabel.bind(this)
+        this.addTrainFilter = this.addTrainFilter.bind(this)
+        this.addLabelFilter = this.addLabelFilter.bind(this)
+        this.updateEpoch = this.updateEpoch.bind(this)
+        this.startTrain = this.startTrain.bind(this)
+    }
+    startTrain(event){
+        event.preventDefault();
+        this.setState({ training: true }, () => {
+            fetch(`/api/model/${this.state.model.id}`, {
+                method: 'PUT',
+                headers: { "Content-Type": "application/json; charset=UTF-8","X-CSRFToken": getCookie('csrftoken') },
+                body: JSON.stringify({
+                    "dataset": {
+                        "field":this.state.fields,
+                        "id":this.state.dataset.id,
+                        "train_filter":this.state.train_filter,
+                        "label_filter":this.state.label_filter,
+                    },
+                    "epoch":this.state.epoch,
+                    "train":true
+                })
+                })
+            .then(response => response.json())
+            .then(message => {
+                console.log(message)
+                this.setState({
+                    training:false,
+                    result:message
+                })
+            })
+        })
+    }
+
+    updateEpoch(event){
+        this.setState(prevState => ({
+            ...this.state,
+            epoch:parseInt(event.target.value)
+        })
+    )
+    }
+    addField(event){
+        let newField = this.state.fields
+        if (newField.includes(event.target.value))
+        newField.remove(event.target.value)
+        else
+            newField.push(event.target.value)
+        console.log(newField)
+        this.setState({
+            ...this.state,
+            fields:newField,
+        })
+    }
+    addTrainFilter(event){
+        let newField = this.state.train_filter
+        if (newField.includes(event.target.value))
+        newField.remove(event.target.value)
+        else
+            newField.push(event.target.value)
+        console.log(newField)
+        this.setState({
+            ...this.state,
+            train_filter:newField,
+        })
+    }
+    addLabelFilter(event){
+        let newField = this.state.label_filter
+        if (newField.includes(event.target.value))
+        newField.remove(event.target.value)
+        else
+            newField.push(event.target.value)
+        console.log(newField)
+        this.setState({
+            ...this.state,
+            label_filter:newField,
+        })
+    }
+    chooseLabel(event){
+        this.setState({
+            ...this.state,
+            label:event.target.value
+        })
+    }
+
+    selectedDatasetHandle(event){
+        this.setState({
+            ...this.state,
+            selectedDataset:event.target.value,
+            preview:false,
+            table:null
+        })
+    }
+
+    renderPreview(){
+        // console.log(this.state.data === null && this.state.searchResult===false)
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.table === null && this.state.preview===false){
+            // console.log(this.state.file)
+            this.setState({ loading: true }, () => {
+                fetch(`/api/dataset/${this.state.selectedDataset}`)
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        preview:true,
+                        table:message.dataset,
+                        dataset:message
+                    })
+                    
+                });
+            });
+        }
+        else if (this.state.preview){
+            return <div className="dataTable" dangerouslySetInnerHTML={{__html: this.state.table}}></div>
+                
+            
+        }
+    }
+    renderTrainForm(){
+        if(this.state.dataset !== null){
+            return (<div className="trainForm">
+                <form id="train" onSubmit={this.startTrain}>
+                    <label>Where is your label for training?</label><br />
+                    <input type="radio" id="first" name="label_column" value="1" onClick={this.chooseLabel}></input>
+                    <label for="first">First column of dataset</label><br />
+                    <input type="radio" id="end" name="label_column" value="-1" onClick={this.chooseLabel}></input>
+                    <label for="end">Last column of dataset</label><br /> <br />
+
+                    <label>How much times would you like to go through data for</label>
+                    <input type="number" onChange={this.updateEpoch} value={this.state.epoch} className="epochInput"></input><br /><br />
+
+                    <label>What filter would you like for training data (optional)</label><br />
+                    <input name="minMax" type="checkbox" value="minMax" onChange={this.addTrainFilter}></input>
+                    <label for="minMax">Min Max Scaler</label><br />
+                    <input name="Standardize" type="checkbox" value="Standardize" onChange={this.addTrainFilter}></input>
+                    <label for="Standardize">Standardize</label><br />
+                    <input name="normalize" type="checkbox" value="normalize" onChange={this.addTrainFilter}></input>
+                    <label for="normalize">Normalize</label>
+                    <br /><br />
+
+                    <label>What filter would you like for training labels (optional)</label><br />
+                    <input name="label" type="checkbox" value="label" onChange={this.addLabelFilter}></input>
+                    <label for="label">Label Encode</label><br />
+                    <input name="binarize" type="checkbox" value="binarize" onChange={this.addLabelFilter}></input>
+                    <label for="binarize">Label Binarize</label>
+                    <br /><br />
+                    
+                    <label>Select columns you want to use.</label><br />
+                    <label>Don't Select any if you want to use all</label>
+                    {this.state.dataset.columns.map((column, index) =>{
+                            return(
+                                <div>
+                                <input name={column} type="checkbox" value={column} onChange={this.addField}></input>
+                                <label for={column}>{column}</label>
+                                </div>
+                            ) 
+                        })}
+                </form>
+            </div>)
+        }
     }
 
     renderModel(){
-        if (this.state.loading){
+        if (this.state.loading && this.state.model===null){
             return (
                 <div className="spinner-container">
                 <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
@@ -1381,7 +1604,8 @@ class Model extends Base {
                             this.setState({
                                 ...this.state,
                                 loading:false,
-                                data:message
+                                data:message,
+                                selectedDataset:message[0]["id"]
                             })
                                 
                         });
@@ -1392,7 +1616,7 @@ class Model extends Base {
                 
             });
         }
-        else if (this.state.model !== null && this.state.data !== null && this.state.modelData !== null){
+        else if (this.state.model !== null && this.state.data !== null && this.state.modelData !== null && this.state.training === false && this.state.result === null){
             return(
                 <div>
                 <div className="pageHeader">{this.state.model.name}</div>
@@ -1417,10 +1641,104 @@ class Model extends Base {
                         })}
                     </table>
                 </div>
+                <div className="datasetSelector">
+                        <form>
+                            <label>Selected Dataset</label><br />
+                            
+                            <select onChange={this.selectedDatasetHandle}>
+                                {this.state.data.map((dataset, index)=>{
+                                    return <option value={dataset["id"]}>{dataset["name"]}</option>
+                                })}
+                            </select>
+                            <button type="submit" form="train" className="trainButton">Train</button>
+                        </form>
+                        {this.renderTrainForm()}
+                </div>
+                
+                <div className="datasetDetail">
+                {this.renderPreview()}
+                </div>
+                
                 </div>
             )
         }
-
+        
+        else if(this.state.training){
+            return (
+                <div>
+                <div className="pageHeader">{this.state.model.name}</div>
+                <div className="weightValue">
+                    <table>
+                        <thead>
+                            <th>Name</th>
+                            <th>Dtype</th>
+                            <th>Shape</th>
+                            <th>Size</th>
+                        </thead>
+                        {this.state.modelData.weights.map((weight, index) =>{
+                        let weightdata = weight["val"]
+                            return(
+                                <tr>
+                                    <td>{weightdata.name}</td>
+                                    <td>{weightdata.dtype}</td>
+                                    <td>{JSON.stringify(weightdata.shape)}</td>
+                                    <td>{weightdata.size}</td>
+                                </tr>
+                            ) 
+                        })}
+                    </table>
+                </div>
+                <div className="trainLoading">
+                <div class="lds-grid"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><br />
+                <span>Training in progress this might take a few minutes...</span>
+                </div>
+                </div>
+            )
+        }
+        else if(this.state.result !== null){
+            return (
+                <div>
+                <div className="pageHeader">{this.state.model.name}</div>
+                <div className="weightValue">
+                    <table>
+                        <thead>
+                            <th>Name</th>
+                            <th>Dtype</th>
+                            <th>Shape</th>
+                            <th>Size</th>
+                        </thead>
+                        {this.state.modelData.weights.map((weight, index) =>{
+                        let weightdata = weight["val"]
+                            return(
+                                <tr>
+                                    <td>{weightdata.name}</td>
+                                    <td>{weightdata.dtype}</td>
+                                    <td>{JSON.stringify(weightdata.shape)}</td>
+                                    <td>{weightdata.size}</td>
+                                </tr>
+                            ) 
+                        })}
+                    </table>
+                </div>
+                <div className="results-container">
+                    <div className="result">
+                    <LineChart data={this.state.result.accuracy} title="Accuracy" color="#70CAD1" />
+                    </div>
+                    <div className="result">
+                    <LineChart data={this.state.result.loss} title="Loss" color="#ffb0dd" />
+                    </div>
+                    <div className="break"></div>
+                    <div className="result">
+                    <LineChart data={this.state.result.val_accuracy} title="Validated Accuracy" color="#8feba8" />
+                    </div>
+                    <div className="result">
+                    <LineChart data={this.state.result.val_loss} title="Validated Loss" color="#ffcdb0" />
+                    </div>
+                </div>
+                
+                </div>
+            )
+        }
     }
 
 

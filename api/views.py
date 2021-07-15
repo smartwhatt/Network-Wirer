@@ -306,12 +306,15 @@ def model(request, pk):
                 return Response({"message": "This Dataset cannot be found"})
 
             df = pd.read_csv(dataset.upload.path)
-            if request.data.get("dataset").get("field") is not None:
+            if request.data.get("dataset").get("field") != []:
                 df = df[request.data["dataset"]["field"]]
             else:
                 df = df
             data = df.values
             train, label = data[:, :-1], data[:, -1]
+            if request.data.get("dataset").get("label") is not None:
+                if request.data["dataset"]["label"] == 1:
+                    train, label = data[:, 0], data[:, 1:]
             train, label = shuffle(train, label)
             train = np.asarray(train).astype(np.float32)
 
@@ -329,9 +332,13 @@ def model(request, pk):
             if models.dataset is not None:
                 models.dataset = dataset
                 models.save()
-            os.remove(models.upload.path)
-            tfjs.converters.save_keras_model(
-                model, 'media_root/models/user_{0}/{1}'.format(request.user.id, models.id))
+
+            if history.history["val_accuracy"][-1] > models.accuracy:
+                models.accuracy = history.history["val_accuracy"][-1]
+                models.save()
+                os.remove(models.upload.path)
+                tfjs.converters.save_keras_model(
+                    model, 'media_root/models/user_{0}/{1}'.format(request.user.id, models.id))
 
             return Response(history.history)
 
@@ -341,7 +348,7 @@ def model(request, pk):
     "model":1,
     "dataset": {
         "id":1,
-        //assuming the last 
+        "label": 1 // -1 is first one is label and -1 then last one is label
         "field":[] // if none then all
         "train_filter":[], // optional
         "label_filter":[], // optional

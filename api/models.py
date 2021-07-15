@@ -48,6 +48,7 @@ class NeuralNetworkModel(models.Model):
                               FileExtensionValidator(allowed_extensions=['bin'])])
     dataset = models.ForeignKey(
         Dataset, on_delete=CASCADE, related_name="models", null=True, blank=True, default=None)
+    accuracy = models.FloatField(default=0)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -13,6 +13,7 @@ class DatasetSerializer(serializers.ModelSerializer):
 class DatasetDetailSerializer(serializers.ModelSerializer):
     dataset = serializers.SerializerMethodField("get_dataset")
     summary = serializers.SerializerMethodField("get_dataset_summary")
+    columns = serializers.SerializerMethodField("get_header")
 
     def get_dataset(self, dataset):
         path = dataset.upload.path
@@ -24,6 +25,11 @@ class DatasetDetailSerializer(serializers.ModelSerializer):
         df = pd.read_csv(path)
         summary = df.describe()
         return summary.to_html()
+
+    def get_header(self, dataset):
+        path = dataset.upload.path
+        df = pd.read_csv(path)
+        return list(df.columns.values)
 
     class Meta:
         model = Dataset
