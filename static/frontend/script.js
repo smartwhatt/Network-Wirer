@@ -43,6 +43,8 @@ class App extends React.Component{
           <Route path="/library" exact component={Library} />
           <Route path="/library/add/:id" exact component={AddLibrary} />
           <Route path="/import/dataset" exact component={ImportDataset} />
+          <Route path="/model" exact component={Models} />
+          <Route path="/model/:id" exact component={Model} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -97,7 +99,7 @@ class Sidebar extends React.Component{
             <div className="sidebar-container">
                 <SidebarButton name="Home" url="/"/>
                 <SidebarButton name="Datasets" url="/dataset"/>
-                <SidebarButton name="Models" url="/"/>
+                <SidebarButton name="Models" url="/model"/>
                 {this.renderLibrary()}
             </div>
         )
@@ -727,7 +729,6 @@ class Library extends Base{
         this.updateQuery = this.updateQuery.bind(this)
         this.renderDataTable = this.renderDataTable.bind(this)
         this.changeState = this.changeState.bind(this)
-        this.renderDataState = this.renderDataState.bind(this)
     }
 
     searchDatasets(){
@@ -758,27 +759,6 @@ class Library extends Base{
                 searchResult:false,
                 data:null
             })
-        )
-    }
-
-    renderDataState(){
-        if(this.state.dataset){
-            return(
-            <div className="dataSelector">
-                    <div id="data">Dataset</div>
-                    <div id="model" onClick={this.changeState}>Model</div>
-                    <hr className="slider" />
-                    
-            </div>
-            )
-        }
-        else if(!this.state.dataset)
-        return (
-            <div className="dataSelector">
-            <div id="data" onClick={this.changeState}>Dataset</div>
-            <div id="model" className="active">Model</div>
-            <hr className="slider" />
-        </div>
         )
     }
 
@@ -873,7 +853,6 @@ class Library extends Base{
                         <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
                     </form>
                 </div>
-                {this.renderDataState()}
                 <div class="datasetsView">
                     {this.renderDataTable()}
                 </div>
@@ -1149,6 +1128,314 @@ class ImportDataset extends Base {
         ) 
     }
 }
+
+class Models extends Base{
+    constructor(props){
+        super(props)
+        // const id = props.match.params.id
+        this.state = {
+            ...this.state,
+            loading:false,
+            data:null,
+            query:"",
+            all:true,
+            searchResult:false
+           }
+        this.updateQuery = this.updateQuery.bind(this)
+        this.renderDatasetView = this.renderDatasetView.bind(this)
+        this.renderDataState = this.renderDataState.bind(this)
+        this.SetAll = this.SetAll.bind(this)
+        this.SetU = this.SetU.bind(this)
+        this.renderDataTable = this.renderDataTable.bind(this)
+        this.searchDatasets = this.searchDatasets.bind(this)
+    }
+    SetAll() {
+        this.setState(prevState => ({
+                ...this.state,
+                all:true,
+                data:null,
+                searchResult:false
+            })
+        )
+    }
+    SetU() {
+        this.setState(prevState => ({
+                ...this.state,
+                all:false,
+                data:null,
+                searchResult:false
+            })
+        )
+    }
+
+    updateQuery(event){
+        this.setState(prevState => ({
+            ...this.state,
+            query:event.target.value
+        })
+    )
+    }
+    renderDataState(){
+        if(this.state.login && this.state.all){
+            return(
+            <div className="dataSelector">
+                    <div id="allData" onClick={this.SetAll}>All Models</div>
+                    <div id="uData" onClick={this.SetU}>Your Models</div>
+                    <hr className="slider" />
+                    
+            </div>
+            )
+        }
+        else if(!this.state.all)
+        return (
+            <div className="dataSelector">
+            <div id="allData" onClick={this.SetAll}>All Models</div>
+            <div id="uData" className="active" onClick={this.SetU}>Your Models</div>
+            <hr className="slider" />
+        </div>
+        )
+        else 
+        return (
+        <div className="dataSelector">
+            <div id="allData" onClick={this.SetAll}>All Models</div>
+            <div id="uData" className="inactive">Your Models</div>
+            <hr className="slider" />
+        </div>
+        )
+    }
+
+    searchDatasets(){
+        if(this.state.query !== ""){
+            this.setState({ loading: true }, () => {
+                fetch(`/api/model?query=${this.state.query}`)
+                .then(response => response.json())
+                .then(message => {
+                    console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchResult:true,
+                        query:""
+                    })
+                    
+                });
+            });
+        }
+    }
+
+    renderDataTable(){
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.all && this.state.data === null && this.state.searchResult===false){
+            this.setState({ loading: true }, () => {
+                fetch("/api/model")
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchDatasets:false
+                    })
+                    
+                });
+            });
+        }
+        else if (!this.state.all && this.state.data === null && this.state.searchResult===false){
+            this.setState({ loading: true }, () => {
+                fetch("/api/user/model")
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        loading:false,
+                        data:message,
+                        searchDatasets:false
+                    })
+                    
+                });
+            });
+        }
+        else if (this.state.data !== null && this.state.searchResult===false){
+            return (
+                <table className="datasetTable">
+                    <tr className="topRow">
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                    </tr>
+                    {this.state.data.map((dataset, index) =>{
+                        // console.log(this.state.data)
+                        return(
+                            <tr>
+                                 <td className="name"><Link to={`/model/${dataset.id}`}>{dataset.name}</Link></td> {/* have to be link */}
+                                <td className="description">{dataset.description}</td>
+                                <td className="owner">{dataset.owner.username}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            )
+        }
+        else if (this.state.data !== null && this.state.searchResult){
+            return (
+                <table className="datasetTable">
+                    <tr className="topRow">
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                    </tr>
+                    {this.state.data.map((dataset, index) =>{
+                        // console.log(this.state.data)
+                        return(
+                            <tr>
+                                 <td className="name"><Link to={`/model/${dataset.id}`}>{dataset.name}</Link></td> {/* have to be link */}
+                                <td className="description">{dataset.description}</td>
+                                <td className="owner">{dataset.owner.username}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            )
+        }
+    }
+
+    renderDatasetView(){
+        return (
+            <div class="datasetsView">
+                {this.renderDataState()}
+                {this.renderDataTable()}
+            </div>
+        )
+    }
+
+    render(){
+        return (
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                        <div className="pageHeader">Models</div>
+                        <form className="searchForm" onSubmit={this.searchDatasets}>
+                        <input className="searchInput" placeholder="Search..." type="search" value={this.state.query} onChange={this.updateQuery}></input>
+                        <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
+                        </form>
+                        <div className="importButton"><Link to="/import/dataset">Create</Link></div> {/* change this to link later */}
+                        {this.renderDatasetView()}
+                </div>
+            </div>
+        )
+    }
+}
+
+
+class Model extends Base {
+    constructor(props){
+        super(props)
+        this.id = props.match.params.id
+        this.state = {
+            ...this.state,
+            loading:false,
+            data:null,
+            model:null,
+            getDataset:false,
+            modelData:null
+           }
+        this.renderModel = this.renderModel.bind(this)
+    }
+
+    renderModel(){
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.model===null && this.state.getDataset===false){
+            this.setState({ loading: true }, () => {
+                fetch(`/api/model/${this.id}`)
+                .then(response => response.json())
+                .then(message => {
+                    // console.log(message)
+                    this.setState({
+                        ...this.state,
+                        model:message
+                    }, async ()=>{
+                        let model = await tf.loadLayersModel(message.upload)
+                        this.setState({
+                            ...this.state,
+                            modelData:model
+                        })
+                        fetch("/api/user/library")
+                        .then(response => response.json())
+                        .then(message => {
+                            // console.log(message)
+                            this.setState({
+                                ...this.state,
+                                loading:false,
+                                data:message
+                            })
+                                
+                        });
+                        
+                    })
+                    
+                });
+                
+            });
+        }
+        else if (this.state.model !== null && this.state.data !== null && this.state.modelData !== null){
+            return(
+                <div>
+                <div className="pageHeader">{this.state.model.name}</div>
+                <div className="weightValue">
+                    <table>
+                        <thead>
+                            <th>Name</th>
+                            <th>Dtype</th>
+                            <th>Shape</th>
+                            <th>Size</th>
+                        </thead>
+                        {this.state.modelData.weights.map((weight, index) =>{
+                        let weightdata = weight["val"]
+                            return(
+                                <tr>
+                                    <td>{weightdata.name}</td>
+                                    <td>{weightdata.dtype}</td>
+                                    <td>{JSON.stringify(weightdata.shape)}</td>
+                                    <td>{weightdata.size}</td>
+                                </tr>
+                            ) 
+                        })}
+                    </table>
+                </div>
+                </div>
+            )
+        }
+
+    }
+
+
+    render(){
+        return(
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                    {this.renderModel()}
+                </div>
+            </div>
+        )
+    }
+}
+
 
 class Test extends Base {
 

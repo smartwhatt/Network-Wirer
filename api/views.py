@@ -206,6 +206,12 @@ def user_items(request, action):
             serializer = DatasetSerializer(datasets, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+    if action == "model":
+        if request.method == "GET":
+            models = request.user.models
+            serializer = NetworkModelSerializer(models, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
     if action == "library":
         if request.method == "GET":
             datasets = request.user.libraries
@@ -249,6 +255,10 @@ def preview(request, type):
 def models(request):
     if request.method == "GET":
         models = NeuralNetworkModel.objects.all()
+        if request.GET.get("query") is not None:
+            query = request.GET.get("query")
+            models = NeuralNetworkModel.objects.filter(Q(name__icontains=query) | Q(
+                description__icontains=query) | Q(owner__username__icontains=query))
         serializer = NetworkModelSerializer(models, many=True)
         return Response(serializer.data)
     if request.method == "POST":
@@ -315,14 +325,13 @@ def model(request, pk):
             model.compile(
                 optimizer='adam', loss="sparse_categorical_crossentropy", metrics=["accuracy"])
             history = model.fit(x=train, y=label, validation_split=0.2,
-                                epochs=request.data["epoch"], shuffle=True)
+                                epochs=request.data["epoch"], shuffle=True, verbose=0)
             if models.dataset is not None:
                 models.dataset = dataset
                 models.save()
             os.remove(models.upload.path)
             tfjs.converters.save_keras_model(
                 model, 'media_root/models/user_{0}/{1}'.format(request.user.id, models.id))
-            # print(model.evaluate(train, label, batch_size=128))
 
             return Response(history.history)
 
