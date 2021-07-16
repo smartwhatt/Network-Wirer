@@ -264,7 +264,6 @@ def models(request):
     if request.method == "POST":
         if not request.user.is_authenticated:
             return Response({"message": "User is not logged"}, status=status.HTTP_401_UNAUTHORIZED)
-
         if request.data.get("model") is None or request.data.get("weight") is None or request.data.get("name") is None:
             return Response({"message": "name or model or weight data is not present"}, status=status.HTTP_400_BAD_REQUEST)
         model_data = json.dumps(request.data["model"])
@@ -327,11 +326,21 @@ def model(request, pk):
             model = tfjs.converters.load_keras_model(models.upload.path)
             model.compile(
                 optimizer='adam', loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-            history = model.fit(x=train, y=label, validation_split=0.2,
-                                epochs=request.data["epoch"], shuffle=True, verbose=0)
-            if models.dataset is not None:
-                models.dataset = dataset
-                models.save()
+
+            if models.dataset is None:
+                try:
+                    history = model.fit(x=train, y=label, validation_split=0.2,
+                                        epochs=request.data["epoch"], shuffle=True, verbose=0)
+                    models.dataset = dataset
+                    models.save()
+                except ValueError:
+                    return Response({"message": "Your dataset is NOT compatible with this model"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if dataset == models.dataset:
+                history = model.fit(x=train, y=label, validation_split=0.2,
+                                    epochs=request.data["epoch"], shuffle=True, verbose=0)
+            else:
+                return Response({"message": "Your dataset might not compatible with this model"}, status=status.HTTP_400_BAD_REQUEST)
 
             if history.history["val_accuracy"][-1] > models.accuracy:
                 models.accuracy = history.history["val_accuracy"][-1]

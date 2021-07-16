@@ -56,6 +56,7 @@ class App extends React.Component{
           <Route path="/import/dataset" exact component={ImportDataset} />
           <Route path="/model" exact component={Models} />
           <Route path="/model/:id" exact component={Model} />
+          <Route path="/import/model" exact component={CreateModel} />
           {/* <Route path="/login" component={Login} />
           <Route path="/register" component={Register} /> */}
         </ReactRouterDOM.HashRouter>
@@ -1172,7 +1173,7 @@ class ImportDataset extends Base {
 class Models extends Base{
     constructor(props){
         super(props)
-        // const id = props.match.params.id
+        localStorage.clear()
         this.state = {
             ...this.state,
             loading:false,
@@ -1367,7 +1368,7 @@ class Models extends Base{
                         <input className="searchInput" placeholder="Search..." type="search" value={this.state.query} onChange={this.updateQuery}></input>
                         <button type="submit" className="searchIcon"><i class="fa fa-search"></i></button>
                         </form>
-                        <div className="importButton"><Link to="/import/dataset">Create</Link></div> {/* change this to link later */}
+                        <div className="importButton"><Link to="/import/model">Create</Link></div> {/* change this to link later */}
                         {this.renderDatasetView()}
                 </div>
             </div>
@@ -1397,7 +1398,8 @@ class Model extends Base {
             label_filter:[],
             epoch:5,
             training:false,
-            result:null
+            result:null,
+            error:false
            }
         this.renderModel = this.renderModel.bind(this)
         this.selectedDatasetHandle = this.selectedDatasetHandle.bind(this)
@@ -1427,13 +1429,26 @@ class Model extends Base {
                     "train":true
                 })
                 })
-            .then(response => response.json())
+            .then(response => {
+                if (response.ok){
+                return response.json()
+                }
+                else{
+                    this.setState({
+                        training:false,
+                        result:"Something went wrong with dataset you selected try using other model or change dataset.",
+                        error:true
+                    })
+                    return false
+                }
+            })
             .then(message => {
-                console.log(message)
+                if (message !== false){
                 this.setState({
                     training:false,
                     result:message
                 })
+            }
             })
         })
     }
@@ -1582,6 +1597,7 @@ class Model extends Base {
                 </div>
             )
         }
+        
         else if (this.state.model===null && this.state.getDataset===false){
             this.setState({ loading: true }, () => {
                 fetch(`/api/model/${this.id}`)
@@ -1616,6 +1632,32 @@ class Model extends Base {
                 
             });
         }
+        else if (this.state.model!==null && this.state.modelData !== null && (!this.state.login || ( this.state.user !== 0 && this.state.user.id !== this.state.model.owner.id)))
+        return(
+            <div>
+            <div className="pageHeader">{this.state.model.name}</div>
+            <div className="weightValue">
+                <table>
+                    <thead>
+                        <th>Name</th>
+                        <th>Dtype</th>
+                        <th>Shape</th>
+                        <th>Size</th>
+                    </thead>
+                    {this.state.modelData.weights.map((weight, index) =>{
+                    let weightdata = weight["val"]
+                        return(
+                            <tr>
+                                <td>{weightdata.name}</td>
+                                <td>{weightdata.dtype}</td>
+                                <td>{JSON.stringify(weightdata.shape)}</td>
+                                <td>{weightdata.size}</td>
+                            </tr>
+                        ) 
+                    })}
+                </table>
+            </div>
+            </div>)
         else if (this.state.model !== null && this.state.data !== null && this.state.modelData !== null && this.state.training === false && this.state.result === null){
             return(
                 <div>
@@ -1695,7 +1737,7 @@ class Model extends Base {
                 </div>
             )
         }
-        else if(this.state.result !== null){
+        else if(this.state.result !== null && this.state.error === false){
             return (
                 <div>
                 <div className="pageHeader">{this.state.model.name}</div>
@@ -1739,6 +1781,39 @@ class Model extends Base {
                 </div>
             )
         }
+        else if(this.state.result !== null && this.state.error){
+            return (
+                <div>
+                <div className="pageHeader">{this.state.model.name}</div>
+                <div className="weightValue">
+                    <table>
+                        <thead>
+                            <th>Name</th>
+                            <th>Dtype</th>
+                            <th>Shape</th>
+                            <th>Size</th>
+                        </thead>
+                        {this.state.modelData.weights.map((weight, index) =>{
+                        let weightdata = weight["val"]
+                            return(
+                                <tr>
+                                    <td>{weightdata.name}</td>
+                                    <td>{weightdata.dtype}</td>
+                                    <td>{JSON.stringify(weightdata.shape)}</td>
+                                    <td>{weightdata.size}</td>
+                                </tr>
+                            ) 
+                        })}
+                    </table>
+                </div>
+                <div className="trainLoading">
+                <div class="lds-grid"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><br />
+                <span className="error">{this.state.result}</span>
+                {console.log(this.state.result)}
+                </div>
+                </div>
+            )
+        }
     }
 
 
@@ -1754,6 +1829,290 @@ class Model extends Base {
     }
 }
 
+class CreateModel extends Base{
+    constructor(props){
+        super(props)
+        this.layers = ["input", "dense", "dropout"]
+        this.activation = ["relu", "elu", "hardSigmoid", "linear", "relu6", "selu", "sigmoid", "softmax", "softplus", "softsign", "tanh", "swish", "mish"]
+        // const id = props.match.params.id
+        this.state = {
+            ...this.state,
+            loading:false,
+            title:"",
+            model:tf.sequential(),
+            description:"",
+            redirect:false,
+            alert:false,
+            message:"",
+            // dataset:true
+            //layers stuff
+            activation:"relu",
+            rate:0,
+            units:0,
+            layer:"input"
+           }
+        this.updateTitle = this.updateTitle.bind(this)
+        this.checkAlert = this.checkAlert.bind(this)
+        this.updateDes= this.updateDes.bind(this)
+        this.submitForm = this.submitForm.bind(this)
+        this.renderModel = this.renderModel.bind(this)
+        this.selectedLayerHandle = this.selectedLayerHandle.bind(this)
+        this.applyLayer = this.applyLayer.bind(this)
+        this.updateDense = this.updateDense.bind(this)
+        this.updateRate = this.updateRate.bind(this)
+        this.clearModel = this.clearModel.bind(this)
+    }
+    checkAlert(){
+        if (this.state.alert)
+        return <span className="error">{this.state.message}</span>
+    }
+
+    clearModel(event){
+        this.setState(prevState => ({
+            ...this.state,
+            model:tf.sequential()
+        })
+    )
+    }
+
+    updateTitle(event){
+        this.setState(prevState => ({
+            ...this.state,
+            title:event.target.value
+        })
+    )
+    }
+    updateDense(event){
+        this.setState(prevState => ({
+            ...this.state,
+            units: parseInt(event.target.value)
+        })
+    )
+    }
+
+    updateRate(event){
+        this.setState(prevState => ({
+            ...this.state,
+            rate: parseFloat(event.target.value)
+        })
+    )
+    }
+
+    selectedLayerHandle(event){
+        console.log(event.target.value)
+        this.setState({
+            ...this.state,
+            layer:event.target.value,
+        })
+    }
+    selectedActivateHandle(event){
+        console.log(event.target.value)
+        this.setState({
+            ...this.state,
+            activation:event.target.value,
+        })
+    }
+
+    applyLayer(){
+        let model = this.state.model
+        switch (this.state.layer){
+            case "input":
+                model.add(tf.layers.inputLayer({inputShape: [this.state.units]}))
+                break
+            case "dense":
+                model.add(tf.layers.dense({units: this.state.units, activation: this.state.activation}))
+                break
+            case "dropout":
+                model.add(tf.layers.dropout({ rate: this.state.rate }))
+                break
+        }
+        this.setState({
+            ...this.state,
+            model:model
+        })
+    }
+
+    updateDes(event){
+        this.setState(prevState => ({
+            ...this.state,
+            description:event.target.value
+        }))
+    }
+    submitForm(){
+        const model_name = this.state.title.split(' ').join('_')
+        
+        this.state.model.save(`localstorage://${model_name}`);
+        
+        fetch("/api/model", {
+            method: 'POST',
+            headers: { "Content-Type": "application/json; charset=UTF-8","X-CSRFToken": getCookie('csrftoken') },
+            body: JSON.stringify({
+                "model":{
+                    "modelTopology":JSON.parse(localStorage.getItem(`tensorflowjs_models/${model_name}/model_topology`)),
+                    "weightsManifest":[{
+                        "paths":[`./${model_name}.weights.bin`],
+                        "weights":JSON.parse(localStorage.getItem(`tensorflowjs_models/${model_name}/weight_specs`))
+                        }
+                    ]},
+                "weight":localStorage.getItem(`tensorflowjs_models/${model_name}/weight_data`),
+                "name":this.state.title,
+                "description":this.state.description,
+            })
+            })
+        .then(response => {
+            if (response.ok){
+            return response.json()
+            }
+            else{
+                this.submitForm()
+                return false
+            }
+        })
+        .then(message => {
+            console.log(message)
+            // localStorage.clear()
+            if (message !== false)
+            this.setState({
+                ...this.state,
+                redirect:true
+            })
+        })
+    
+    }
+
+    renderModel(){
+        if  (this.state.model.layers.length === 0)
+        return (
+            <div className="weightValue">
+            <table>
+                    <thead>
+                        <th>Name</th>
+                        <th>Dtype</th>
+                        <th>Shape</th>
+                        <th>Units</th>
+                        <th>Size</th>
+                    </thead>
+                    <tr><td colspan="5" className="empty">--This Model is Empty--</td></tr>
+            </table>
+            </div>
+        )
+        return (
+            <div className="weightValue">
+                    <table>
+                        <thead>
+                            <th>Name</th>
+                            <th>Dtype</th>
+                            <th>Shape</th>
+                            <th>Units</th>
+                            <th>Size</th>
+                        </thead>
+                        {this.state.model.layers.map((layer, index) =>{
+                            if (layer.name.includes("dense"))
+                            return(
+                                <tr>
+                                    <td>{layer.name}</td>
+                                    <td>{layer.kernel.val.dtype}</td>
+                                    <td>{JSON.stringify(layer.kernel.val.shape)}</td>
+                                    <td>{layer.units}</td>
+                                    <td>{layer.kernel.val.size}</td>
+                                </tr>
+                            ) 
+                        
+                            if (layer.name.includes("input"))
+                            return(
+                                <tr>
+                                    <td>{layer.name}</td>
+                                    <td>{layer.dtype}</td>
+                                    <td>{JSON.stringify(layer.batchInputShape)}</td>
+                                    <td>none</td>
+                                    <td>none</td>
+                                </tr>
+                            )}
+                        )}
+                    </table>
+                    <button onClick={this.clearModel} className="clearButton">Clear All</button>
+                </div>
+        )
+    }
+    renderForm(){
+        switch(this.state.layer){
+            case "input":
+                return(
+                    <div>
+                    <label>Input Shape</label><br />
+                    <input type="number" value={this.state.units} onChange={this.updateDense}></input>
+                    </div>
+                )
+            case "dense":
+                return(
+                    <div>
+                    <label>Dense Units</label><br />
+                    <input type="number" value={this.state.units} onChange={this.updateDense}></input><br />
+                    <label>Activation Function</label><br />
+                    <select onChange={this.selectedActivateHandle}>
+                                {this.activation.map((layer, index)=>{
+                                    return <option value={layer}>{layer}</option>
+                                })}
+                    </select><br />
+                    </div>
+                )
+            case "dropout":
+                return(
+                    <div>
+                    <label>Drop rate</label><br />
+                    <input type="number" value={this.state.rate} onChange={this.updateRate}></input>
+                    </div>
+                )
+        }
+    }
+
+    render(){
+        if (this.state.redirect)
+        return <Redirect to="/model" />
+
+        if (this.state.login)
+        return(
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                <div className="pageHeader">Model Creation</div>
+                <form className="importForm" onSubmit={this.submitForm}>
+                    <button className="submitButton" type="submit">Submit</button>
+                    {this.checkAlert()}
+                    <input className="importInput" placeholder="Title..." value={this.state.title} onChange={this.updateTitle}></input>
+                    <textarea className="importTextarea" placeholder="Description..." rows="3" contenteditable value={this.state.description} onChange={this.updateDes}></textarea>
+                </form>
+                <div className="layerForm">
+                    <form onSubmit={this.applyLayer}>
+                        <label>Choose Layer you would like to add to the model</label><br />
+                        <label>Layer Types</label><br />
+                        <select onChange={this.selectedLayerHandle}>
+                                {this.layers.map((layer, index)=>{
+                                    return <option value={layer}>{layer}</option>
+                                })}
+                        </select><br />
+                        {this.renderForm()}
+                        <button className="applyButton" type="submit">Apply</button>
+                    </form>
+                </div>
+
+                {this.renderModel()}
+                </div>
+            </div>
+        )
+        else
+        return(
+            <div className="div-container">
+                {this.renderMenu()}
+                <div className="content-container">
+                    <div className="pageHeader">Library</div>
+                    <span className="error">User not logged in</span><br />
+                    <Link to="signin">Login here</Link>
+                </div>
+            </div>
+        )
+    }
+}
 
 class Test extends Base {
 

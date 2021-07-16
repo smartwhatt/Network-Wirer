@@ -680,12 +680,16 @@ input:focus{
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                
             }
             tr:nth-child(even){
                 background-color: $secondary-color-table;
             }
             thead:nth-child(1){
                 border-bottom: solid black;
+            }
+            .empty{
+                text-align: center;
             }
     }
 }
@@ -871,4 +875,83 @@ input:focus{
 .break{
     flex-basis:100%;
     height: 0;
+}
+
+.layerForm{
+    background-color: $secondary-lighter-color;
+    margin: .5em 4em;
+    height: fit-content;
+    text-align: left;
+    max-width: 60vw;
+    width: 30vw;
+    min-width: fit-content;
+    padding: 1em;
+    border-radius: .25em;
+    transition: .3s ease-in-out;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+
+    form{
+        width: inherit;
+        height: inherit;
+        font-size: 1em;
+        text-align: inherit;
+        transition: .3s ease-in-out;
+        select{
+            width: 60%;
+            height: inherit;
+            font-size: inherit;
+            padding: .2em;
+            outline: none;
+            border: none;
+            border-radius: .25em;
+            background-color: $secondary-color-table;
+            cursor: pointer;
+            transition: .3s ease-in-out;
+            display: inline;
+            margin: .2em;
+        }
+        select:hover{
+            opacity: 80%;
+        }
+        .applyButton{
+            border-radius: 1em;
+            background-color: $base-darker-color;
+            margin: 1em 1em 2em 1em;
+            padding: 1em 2em;
+            color: $white;
+            box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+            // outline: none;
+            border: none;
+            transition: .2s ease-in-out;
+            font-size: .5em;
+            display: inline;
+        }
+        input{
+            width: 60%;
+            height: inherit;
+            font-size: inherit;
+            padding: .2em;
+            outline: none;
+            border: none;
+            border-radius: .25em;
+            background-color: $secondary-color-table;
+            cursor: pointer;
+            transition: .3s ease-in-out;
+            display: inline;
+            margin: .2em;
+        }
+    }
+}
+.clearButton{
+    border-radius: 1em;
+    background-color: $base-darker-color;
+    margin: 1em 1em 2em 1em;
+    padding: 1em 2em;
+    color: $white;
+    box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+    // outline: none;
+    border: none;
+    transition: .2s ease-in-out;
+    font-size: .5em;
+    display: inline;
 }
