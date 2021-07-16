@@ -93,6 +93,30 @@ class LineChart extends React.Component{
       }
 }
 
+class DoughnutChart extends React.Component{
+    constructor(props) {
+        super(props);
+        this.chartRef = React.createRef();
+      }
+    
+      componentDidMount() {
+        this.myChart = new Chart(this.chartRef.current, {
+          type: 'doughnut',
+          data: {
+            labels: ["Accuracy", "Loss"],
+            datasets: [{
+              data: this.props.data,
+              backgroundColor: this.props.color
+            }]
+          }
+        });
+      }
+
+    render() {
+        return <canvas ref={this.chartRef} />
+      }
+}
+
 class Menu extends React.Component{
     
     renderLogedin = () => {
@@ -181,11 +205,127 @@ class Base extends React.Component {
 }
 
 class Home extends Base {
+    constructor(props){
+        super(props)
+        this.state = {
+             ...this.state, 
+             loading:false,
+             model:null,
+             modelData:null,
+             dataset:null
+            }
+    }
+
+    renderTopBoard(){
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.dataset === null && this.state.model===null && this.state.login){
+            this.setState({ loading: true }, () => {
+                fetch("/api/user/dataset")
+                .then(response => response.json())
+                .then(message => {
+                    const randIndex = Math.floor(Math.random() * message.length)
+                    fetch(`/api/dataset/${message[randIndex].id}`)
+                    .then(response => response.json())
+                    .then(message => {
+                        console.log(message)
+                        this.setState({
+                            ...this.state,
+                            "dataset":message,
+                            loading:false
+                        })
+                    })
+                });
+                fetch("/api/user/model")
+                .then(response => response.json())
+                .then(message => {
+                    const randIndex = Math.floor(Math.random() * message.length)
+                    fetch(`/api/model/${message[randIndex].id}`)
+                    .then(response => response.json())
+                    .then(message => {
+                        console.log(message)
+                        this.setState({
+                            ...this.state,
+                            "model":message
+                        }, async ()=>{
+                            let model = await tf.loadLayersModel(message.upload)
+                            this.setState({
+                                ...this.state,
+                                modelData:model
+                            })
+                        })
+                    })
+                });
+            });
+        }
+        else if (!this.state.login)
+        return(
+            <div>
+                <div className="pageHeader">Welcome!</div>
+            </div>
+        )
+        else if(this.state.dataset !== null && this.state.model!==null&& this.state.modelData !==null && this.state.login){
+            return(
+                <div className="topDashboard">
+                    <div className="accuracyChart">
+                    <div className="cardHeader">{this.state.model.name}</div>
+                        <DoughnutChart data={[this.state.model.accuracy, 1-this.state.model.accuracy]} color={["#a5ffa1", "#fc4e03"]} />
+                    </div>
+                    <div className="modelSummary">
+                    <table>
+                        <thead>
+                            <th>Name</th>
+                            <th>Dtype</th>
+                            <th>Shape</th>
+                            <th>Size</th>
+                        </thead>
+                        {this.state.modelData.weights.map((weight, index) =>{
+                        let weightdata = weight["val"]
+                            return(
+                                <tr>
+                                    <td>{weightdata.name}</td>
+                                    <td>{weightdata.dtype}</td>
+                                    <td>{JSON.stringify(weightdata.shape)}</td>
+                                    <td>{weightdata.size}</td>
+                                </tr>
+                            ) 
+                        })}
+                    </table>
+                    </div>
+                </div>
+            )
+        }
+    }
+    renderTable(){
+        if (this.state.loading){
+            return (
+                <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            )
+        }
+        else if (this.state.dataset !== null && this.state.login)
+        return(
+            <div className="dataDashboard">
+                <div className="cardHeader">{this.state.dataset.name}</div>
+                <div className="dataSummary" dangerouslySetInnerHTML={{__html: this.state.dataset.dataset.trim()}}></div>
+            </div>
+        )
+    }
+
     render() {
         return (
         <div className="div-container">
             {this.renderMenu()}
-            <div className="content-container">Hello World</div>
+            <div className="content-container">
+                {this.renderTopBoard()}
+                {this.renderTable()}
+            </div>
         </div>
         )
     }
@@ -2114,44 +2254,6 @@ class CreateModel extends Base{
     }
 }
 
-class Test extends Base {
-
-    fetchModel(){
-        const model = tf.sequential({
-            layers: [
-              tf.layers.dense({inputShape: [784], units: 32, activation: 'relu'}),
-              tf.layers.dense({units: 10, activation: 'softmax'}),
-            ]
-           });
-           let model_name = "test"
-           const saveModel = model.save(`localstorage://${model_name}`);
-           fetch("/api/model", {
-            method: 'POST',
-            headers: { "Content-Type": "application/json; charset=UTF-8","X-CSRFToken": getCookie('csrftoken') },
-            body: JSON.stringify({
-                "model":{
-                    "modelTopology":JSON.parse(localStorage.getItem(`tensorflowjs_models/${model_name}/model_topology`)),
-                    "weightsManifest":[{
-                        "paths":[`./${model_name}.weights.bin`],
-                        "weights":JSON.parse(localStorage.getItem(`tensorflowjs_models/${model_name}/weight_specs`))
-                        }
-                    ]},
-                "weight":localStorage.getItem(`tensorflowjs_models/${model_name}/weight_data`),
-                "name":model_name,
-                "description":"",
-            })
-            })
-        .then(response => response.json())
-        .then(message => {
-            console.log(message)
-        })
-    }
-    render(){
-        return (
-            {}
-        )
-    }
-}
 
 window.ondragover = function(e) { e.preventDefault(); return false };
 window.ondrop = function(e) { e.preventDefault(); return false };

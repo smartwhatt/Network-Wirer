@@ -18,7 +18,7 @@ class DatasetDetailSerializer(serializers.ModelSerializer):
     def get_dataset(self, dataset):
         path = dataset.upload.path
         df = pd.read_csv(path)
-        return df.head(25).to_html()
+        return df.sample(frac=1).reset_index(drop=True).head(25).to_html()
 
     def get_dataset_summary(self, dataset):
         path = dataset.upload.path

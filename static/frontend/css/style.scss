@@ -955,3 +955,105 @@ input:focus{
     font-size: .5em;
     display: inline;
 }
+
+.topDashboard{
+    display: flex;
+    // height: 30vh;
+    .accuracyChart{
+        background-color: $secondary-lighter-color;
+        margin: .5em 4em;
+        height: inherit;
+        text-align: left;
+        padding: 1em;
+        border-radius: .25em;
+        transition: .3s ease-in-out;
+        box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+        .cardHeader{
+            width: inherit;
+            border-radius: inherit;
+            background-color: $secondary-lighter-color;
+            font-size: 1.5em;
+        }
+    }
+    .modelSummary{
+        background-color: $secondary-lighter-color;
+        margin: .5em 4em;
+        height: inherit;
+        text-align: left;
+        padding: 1em;
+        border-radius: .25em;
+        transition: .3s ease-in-out;
+        box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+        table{
+            border-collapse: collapse;
+            border-radius: .25em;
+            border-style: none;
+            max-height: inherit;
+            width: inherit;
+            // border-color: $secondary-text-color;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            
+            td, th{
+                text-align: center;
+                padding: .5em;
+                max-width: 10em;
+                border: none;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            tr:nth-child(even){
+                background-color: $secondary-color-table;
+            }
+            thead:nth-child(1){
+                border-bottom: solid black;
+            }
+        }
+    }
+}
+
+.dataDashboard{
+    background-color: $secondary-lighter-color;
+        margin: .5em 4em;
+        height: inherit;
+        text-align: left;
+        padding: 1em;
+        border-radius: .25em;
+        transition: .3s ease-in-out;
+        box-shadow: 0 .1em .1em rgba(0, 0, 0, 0.25);
+        .cardHeader{
+            width: inherit;
+            border-radius: inherit;
+            background-color: $secondary-lighter-color;
+            font-size: 1.5em;
+        }
+        table{
+            border-collapse: collapse;
+            border-radius: .25em;
+            border-style: none;
+            max-height: inherit;
+            width: 100%;
+            word-wrap: break-word;
+            // border-color: $secondary-text-color;
+            table-layout: fixed;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            
+            td, th{
+                text-align: center;
+                padding: .5em;
+                max-width: 20em;
+                border: none;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            tr:nth-child(even){
+                background-color: $secondary-color-table;
+            }
+            thead:nth-child(1){
+                border-bottom: solid black;
+            }
+        }
+}
