@@ -217,11 +217,11 @@ class Home extends Base {
     }
 
     renderTopBoard(){
-        if (this.state.loading){
+        if (!this.state.login || this.state.dataset === null || this.state.model===null){
             return (
-                <div className="spinner-container">
-                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-                </div>
+                <div>
+                <div className="pageHeader">Welcome!</div>
+            </div>
             )
         }
         else if (this.state.dataset === null && this.state.model===null && this.state.login){
@@ -263,13 +263,13 @@ class Home extends Base {
                 });
             });
         }
-        else if (!this.state.login)
+        else if (this.state.loading && this.state.model===null && this.state.modelData ===null)
         return(
-            <div>
-                <div className="pageHeader">Welcome!</div>
-            </div>
+            <div className="spinner-container">
+                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
         )
-        else if(this.state.dataset !== null && this.state.model!==null&& this.state.modelData !==null && this.state.login){
+        else if(this.state.model!==null&& this.state.modelData !==null && this.state.login){
             return(
                 <div className="topDashboard">
                     <div className="accuracyChart">
@@ -302,7 +302,7 @@ class Home extends Base {
         }
     }
     renderTable(){
-        if (this.state.loading){
+        if (this.state.loading && this.state.dataset === null){
             return (
                 <div className="spinner-container">
                 <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
