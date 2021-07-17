@@ -42,7 +42,18 @@ Lastly migrate database changes
 $ python manage.py migrate
 ```
 ## Get Started
-
+Everytime you want to start the server run
+```
+$ venv\scripts\activate
+```
+Then you can run (optional) to create superuser to access admin dashboard
+```
+$ python manage.py createsuperuser
+```
+Finally you can run to start server on http://127.0.0.1:8000
+```
+$ python manage.py runserver
+```
 ## Files
 
 ## Distinctiveness and Complexity
