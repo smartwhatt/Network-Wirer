@@ -15,13 +15,32 @@ Pages of this project are mobile-responsive
 ## Installation
 First is to clone this repositary
 
-`$ git clone https://github.com/Jimmy-Tempest/Network-Wirer.git`
+```
+$ git clone https://github.com/Jimmy-Tempest/Network-Wirer.git
+```
 
 Then change directory in to the cloned repositary
 
-`$ cd Network-Wirer`
+```
+$ cd Network-Wirer
+```
 
-Then 
+Then create and activate virtual enviroment for this project
+```
+$ pip install virtualenv
+$ virtualenv venv
+$ venv\scripts\activate
+```
+
+Then install requirements
+```
+$ pip install -r requirements.txt
+```
+
+Lastly migrate database changes
+```
+$ python manage.py migrate
+```
 ## Get Started
 
 ## Files
