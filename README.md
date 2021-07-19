@@ -1,5 +1,5 @@
 # Neural Wirer
-[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
+[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/Jimmy-Tempest/Network-Wirer/blob/master/LICENSEs)
 
 Neural Wirer is the cs50 web final project for neural network creation and dataset storing. It allows users to import "CSV" files as datasets for later model training.
 Other than this, it allows users to create a TensorFlow-based model and let users train and prototype the model in an instance. Lastly, users can browse other users
